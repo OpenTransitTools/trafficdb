@@ -48,5 +48,6 @@ setup(
         main = ott.trafficdb.pyramid.app:main
 
         [console_scripts]
+        get_inrix_token = ott.trafficdb.inrix.base:main
     """,
 )

@@ -1,3 +1,4 @@
+vendor*
 .eggs
 [a-z].py
 [a-z].json
