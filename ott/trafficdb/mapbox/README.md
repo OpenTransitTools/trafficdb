@@ -33,4 +33,11 @@ What about web services?  Needed?
  - Return a .csv file rathner than .json or .xml
  - Other stuff??  Route, Transit, Demograpics, ???
  
- 
+
+Sample Data:
+ - Willmington NC has minimal GTFS data (just stops)
+   can we order that limited data into ordered route stops 
+   and thus into shapes
+ - https://docs.mapbox.com/data/traffic/overview/example/
+ - https://openmobilitydata.org/p/wave-transit/633/latest
+ - http://tracking.wavetransit.com/
