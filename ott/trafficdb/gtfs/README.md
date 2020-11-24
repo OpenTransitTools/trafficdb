@@ -1,6 +1,20 @@
 GTFS to OSM
 ===========
 
+11/17/2020:
+ - find nodes / ways along a trip / pattern / shape:
+   - minimal is 2 stops (and not geom data)
+   - maximal has shapes data + 2 stops ... that shape data should intersect closely with some OSM way(s)
+   - OSM might have multiple ways / nodes along the way and/or between 2 stops
+   - distill that data down to what ???:
+     - for inrix data, would be nodes from stops/OSM ... and then find ways that match those nodes
+     - for mapbox data, it would be OSM nodes ... which you'd then be looking to match
+
+ Questions:
+  - Is correct?: a "start_stop, end_stop" transit segment always travels along the same street(s) / same path?
+  - Could there be a condition where tripX,stopA,stopB travels differently than tripY,stopA,stopB?  (ask Myleen)
+
+
 thoughts:
  - "a segment as the path between two bus stops that exists in at least one line and pattern in the transportation system" (from the TransLink paper)
  - trip stops: show stops along a trip, indexed via shape (shape and stop times per trip are same, right ... coudl be different?)
