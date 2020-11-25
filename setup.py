@@ -8,6 +8,11 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'ott.utils',
+    'gtfsdb',
+    'geoalchemy2',
+    'sqlalchemy',
+    'zope.sqlalchemy',
+
     'pyramid',
     'pyramid_tm',
     'pyramid_exclog',
@@ -49,5 +54,6 @@ setup(
 
         [console_scripts]
         get_inrix_token = ott.trafficdb.inrix.base:main
+        speeds-load = ott.trafficdb.loader:main
     """,
 )
