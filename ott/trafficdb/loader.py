@@ -1,20 +1,21 @@
+from ott.utils.parse.cmdline import db_cmdline
+from ott.utils.config_util import ConfigUtil
+from ott.utils import string_utils
+
+import logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__file__)
 
 
-def load_speed_via_cmdline(api_key_required=True, agency_required=True, api_key_msg="Get a TriMet API Key at http://developer.trimet.org/appid/registration"):
-    """
-    this main() function will call TriMet's GTFS-RT apis by default (as and example of how to load the system)
-    """
-    args = gtfs_cmdline.gtfs_rt_parser(api_key_required=api_key_required, api_key_msg=api_key_msg, agency_required=agency_required)
-
-    no_errors = load_agency_feeds(session, args.agency_id, aurl, turl, vurl)
-    if no_errors:
-        log.info("Thinking that loading went well...")
-    else:
-        log.info("Errors Loading???")
+def load_speed_data(section="db"):
+    config = ConfigUtil.factory(section=section)
+    args = db_cmdline.db_parser('bin/speeds-load', do_parse=True, url_required=False, add_misc=True)
+    url = string_utils.get_val(args.database_url, config.get('db_url'))
+    print(url)
 
 
 def main():
-    load_speed_via_cmdline()
+    load_speed_data()
 
 
 if __name__ == '__main__':
