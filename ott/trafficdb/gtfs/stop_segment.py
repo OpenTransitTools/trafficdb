@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Index, Integer, Numeric, String, DateTime
 from sqlalchemy.orm import deferred, object_session, relationship, backref
 
-from ott.gtfsdb.model.base import Base
+from ott.trafficdb.gtfs.base import Base
 
 import logging
 log = logging.getLogger(__file__)
@@ -12,17 +12,8 @@ class StopSegment(Base):
 
     segment_id = Column(String, nullable=False)
 
-    start = Column(Integer, index=True)
-    end = Column(Integer)
-
-    cause = Column(String)
-    effect = Column(String)
-
-    url = Column(String)
-    header_text = Column(String)
-    description_text = Column(String)
-
-    route_short_names = Column(String)
+    start_stop_id = Column(String, index=True)
+    end_stop_id = Column(String)
 
     """
     entities = relationship(
