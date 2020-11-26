@@ -1,6 +1,4 @@
 from sqlalchemy import Column, Index, Integer, Numeric, String, DateTime
-from sqlalchemy.orm import deferred, object_session, relationship, backref
-
 from ott.trafficdb.gtfs.base import Base
 
 import logging
@@ -11,9 +9,8 @@ class StopSegment(Base):
     __tablename__ = 'traffic_stop_segments'
 
     segment_id = Column(String, nullable=False)
-
-    start_stop_id = Column(String, index=True)
-    end_stop_id = Column(String)
+    begin_stop_id = Column(String, index=True)
+    end_stop_id = Column(String, index=True)
 
     """
     entities = relationship(
@@ -25,56 +22,37 @@ class StopSegment(Base):
     )
     """
 
-    def __init__(self, agency, id):
-        self.agency = agency
-        self.segment_id = id
-
-    def add_short_names(self, gtfsdb_session, sep=', '):
-        """
-        will add the route_short_names (from gtfsdb) to the StopSegment record as a comma separated string
-        """
-        if gtfsdb_session:
-            short_names = []
-            try:
-                route_ids = self.get_route_ids()
-                if len(route_ids) > 0:
-                    log.debug("query Route table")
-                    from gtfsdb import Route
-                    routes = gtfsdb_session.query(Route).filter(Route.route_id.in_(route_ids)).order_by(Route.route_sort_order)
-                    for r in routes.all():
-                        nm = self.make_pretty_short_name(r)
-                        if nm and nm not in short_names:
-                            short_names.append(nm)
-                    self.route_short_names = sep.join([str(x) for x in short_names])
-            except Exception as e:
-                log.exception(e)
+    def __init__(self, begin_stop, end_stop):
+        self.segment_id = format("{}-{}", begin_stop.stop_id, end_stop.stop_id)
 
     @classmethod
-    def parse_gtfsrt_record(cls, session, agency, record, timestamp):
+    def factory(cls, begin_stop, end_stop):
         """
-        create or update new StopSegments and positions
+        will create...
         """
         ret_val = None
-
-        try:
-            ret_val = StopSegment(agency, record.id)
-            ret_val.set_attributes_via_gtfsrt(record.StopSegment)
-            session.add(ret_val)
-        except Exception as err:
-            log.exception(err)
-            session.rollback()
-        finally:
-            try:
-                StopSegmentEntity.make_entities(session, agency, record.id, record.StopSegment)
-                session.commit()
-                ret_val.add_short_names(session)
-                session.commit()
-                session.flush()
-            except Exception as err:
-                log.exception(err)
-                session.rollback()
-
         return ret_val
+
+    @classmethod
+    def load(cls, session):
+        """
+        will find ...
+        """
+        try:
+            from gtfsdb import Trip
+            t = session.query(Trip).limit(1).one()
+            stop_times = t.stop_times
+            stop_times_len = len(stop_times)
+            if stop_times_len > 1:
+                for i, st in enumerate(stop_times):
+                    begin_stop = stop_times[i]
+                    end_stop = stop_times[i+1]
+                    print(begin_stop.stop_sequence, end_stop.stop_sequence)
+                    if i+2 >= stop_times_len:
+                        break
+
+        except Exception as e:
+            log.exception(e)
 
     @classmethod
     def clear_tables(cls, session, agency):

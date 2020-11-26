@@ -3,6 +3,7 @@ from ott.utils.config_util import ConfigUtil
 from ott.utils import string_utils
 
 from ott.trafficdb.gtfs.database import Database
+from ott.trafficdb.gtfs.stop_segment import StopSegment
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,7 @@ def load_speed_data(section="db"):
     is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
     session = Database.make_session(url, schema, is_geospatial, args.create)
 
+    StopSegment.load(session)
 
     session.commit()
     session.commit()  # think I need 2 commits due to session create + begin_nested being created above.
