@@ -1,7 +1,10 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Numeric
+from sqlalchemy.orm import relationship
 
 from gtfsdb import Trip
 from gtfsdb import Shape
+from gtfsdb import Stop
+from gtfsdb import PatternBase
 
 from ott.trafficdb.gtfs.base import Base
 
@@ -9,37 +12,51 @@ import logging
 log = logging.getLogger(__file__)
 
 
-class StopSegment(Base):
+class StopSegment(Base, PatternBase):
     __tablename__ = 'traffic_stop_segments'
 
-    segment_id = Column(String, nullable=False)
-    begin_stop_id = Column(String, index=True)
-    end_stop_id = Column(String, index=True)
+    id = Column(String(255), primary_key=True, index=True)
+    begin_stop_id = Column(String(255), index=True, nullable=False)
+    end_stop_id = Column(String(255), index=True, nullable=False)
+
+    begin_time = Column(Numeric(20, 10), nullable=False)
+    end_time = Column(Numeric(20, 10), nullable=False)
+    distance = Column(Numeric(20, 10), nullable=False)
+    shape_id = Column(String(255)) # note: this is a sub-shape between 2 stops
 
     """
-    entities = relationship(
-        'StopSegmentEntity',
-        primaryjoin='StopSegment.StopSegment_id == StopSegmentEntity.StopSegment_id',
-        foreign_keys='(StopSegment.StopSegment_id)',
-        backref=backref("StopSegment", lazy="joined", uselist=False),
-        uselist=True, viewonly=True
+    begin_stop = relationship(
+        'Stop',
+        primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
+        foreign_keys='(StopSegment.begin_stop_id)',
+        uselist=False, viewonly=True
     )
+
+    end_stop = relationship(
+        'Stop',
+        primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
+        foreign_keys='(StopSegment.end_stop_id)',
+        uselist=False, viewonly=True
+    )
+
+    shapes = relationship(
+        'Shape',
+        primaryjoin='Shape.shape_id==StopSegment.shape_id',
+        foreign_keys='(Shape.shape_id)',
+        uselist=True, viewonly=True)
     """
 
-    def __init__(self, begin_stop, end_stop):
-        self.segment_id = self.make_id(begin_stop, end_stop)
-
-    @classmethod
-    def factory(cls, begin_stop, end_stop):
-        """
-        will create...
-        """
-        ret_val = None
-        return ret_val
-
-    @classmethod
-    def _make_id(cls, begin_stop, end_stop):
-        return "{}-{}".format(begin_stop.stop_id, end_stop.stop_id)
+    def __init__(self, session, id, begin_stop, end_stop, trip):
+        self.id = id
+        self.begin_stop_id = begin_stop.stop_id
+        self.end_stop_id = end_stop.stop_id
+        self.begin_time = begin_stop.arrival_time
+        self.end_time = end_stop.departure_time
+        self.distance = end_stop.shape_dist_traveled - begin_stop.shape_dist_traveled
+        self.shape_id = trip.shape_id
+        if hasattr(self, 'geom'):
+            q = self._make_shapes(session, begin_stop, end_stop, trip)
+            self.geom_from_shape(q)
 
     @classmethod
     def _make_shapes(cls, session, begin_stop, end_stop, trip):
@@ -47,34 +64,25 @@ class StopSegment(Base):
         return the shape points between two stops along a trip
         TODO: could be a gtfsdb utility belonging to Shape. class
         """
-        ret_val = session.query(Shape)\
-            .filter(Shape.shape_id == trip.shape_id)\
-            .filter(Shape.shape_dist_traveled >= begin_stop.shape_dist_traveled)\
-            .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled)\
-            .all()
+        ret_val = session.query(Shape) \
+            .filter(Shape.shape_id == trip.shape_id) \
+            .filter(Shape.shape_dist_traveled >= begin_stop.shape_dist_traveled) \
+            .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled)
         return ret_val
 
     @classmethod
     def _cache_segment(cls, session, cache, begin_stop, end_stop, trip):
-        id = cls._make_id(begin_stop, end_stop)
+        id = "{}-{}".format(begin_stop.stop_id, end_stop.stop_id)
         if id not in cache:
-            cache[id] = {
-                'id': id,
-                'begin_time': begin_stop.arrival_time,
-                'end_time': end_stop.departure_time,
-                'begin_stop': begin_stop.stop,
-                'end_stop': end_stop.stop,
-                'distance': end_stop.shape_dist_traveled - begin_stop.shape_dist_traveled,
-                'shape': cls._make_shapes(session, begin_stop, end_stop, trip)
-            }
+            ss = cls(session, id, begin_stop, end_stop, trip)
+            cache[id] = ss
         else:
             # check for earlier segment begin_time than what's cached
-            if begin_stop.arrival_time < cache[id]['begin_time']:
-                cache[id]['begin_time'] = begin_stop.arrival_time
+            if begin_stop.arrival_time < cache[id].begin_time:
+                cache[id].begin_time = begin_stop.arrival_time
             # check for later segment end_time than what's cached
-            if end_stop.departure_time > cache[id]['end_time']:
-                cache[id]['end_time'] = end_stop.departure_time
-
+            if end_stop.departure_time > cache[id].end_time:
+                cache[id].end_time = end_stop.departure_time
 
     @classmethod
     def load(cls, session):
@@ -97,16 +105,22 @@ class StopSegment(Base):
                             break
 
             # step 2: write this cache to db
-            print(len(cache))
-            for c in cache:
-                print(cache[c])
+            if len(cache) > 0:
+                cls.clear_tables(session)
+                print(len(cache))
+                for c in cache:
+                    #session.add(c)
+                    pass
+                session.commit()
+                session.flush()
+
         except Exception as e:
             log.exception(e)
 
 
     @classmethod
-    def clear_tables(cls, session, agency):
+    def clear_tables(cls, session):
         """
         clear out stop segments
         """
-        session.query(StopSegment).filter(StopSegment.agency == agency).delete()
+        session.query(StopSegment).delete()
