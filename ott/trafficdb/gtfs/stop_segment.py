@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 
 from gtfsdb import Trip
 from gtfsdb import Shape
-from gtfsdb import Stop
 from gtfsdb import PatternBase
 
 from ott.trafficdb.gtfs.base import Base
@@ -23,28 +22,6 @@ class StopSegment(Base, PatternBase):
     distance = Column(Numeric(20, 10), nullable=False)
     shape_id = Column(String(255)) # note: this is a sub-shape between 2 stops
 
-    """
-    begin_stop = relationship(
-        'Stop',
-        primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
-        foreign_keys='(StopSegment.begin_stop_id)',
-        uselist=False, viewonly=True
-    )
-
-    end_stop = relationship(
-        'Stop',
-        primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
-        foreign_keys='(StopSegment.end_stop_id)',
-        uselist=False, viewonly=True
-    )
-
-    shapes = relationship(
-        'Shape',
-        primaryjoin='Shape.shape_id==StopSegment.shape_id',
-        foreign_keys='(Shape.shape_id)',
-        uselist=True, viewonly=True)
-    """
-
     def __init__(self, session, id, begin_stop, end_stop, trip):
         super(StopSegment, self).__init__()
         self.id = id
@@ -57,6 +34,27 @@ class StopSegment(Base, PatternBase):
         if hasattr(self, 'geom'):
             q = self._make_shapes(session, begin_stop, end_stop, trip)
             self.geom_from_shape(q)
+
+        ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
+        self.begin_stop = relationship(
+            'Stop',
+            primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
+            foreign_keys='(StopSegment.begin_stop_id)',
+            uselist=False, viewonly=True
+        )
+
+        self.end_stop = relationship(
+            'Stop',
+            primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
+            foreign_keys='(StopSegment.end_stop_id)',
+            uselist=False, viewonly=True
+        )
+
+        self.shapes = relationship(
+            'Shape',
+            primaryjoin='Shape.shape_id==StopSegment.shape_id',
+            foreign_keys='(Shape.shape_id)',
+            uselist=True, viewonly=True)
 
     @classmethod
     def _make_shapes(cls, session, begin_stop, end_stop, trip):
@@ -92,7 +90,8 @@ class StopSegment(Base, PatternBase):
         cache = {}
         try:
             # step 1: query gtfsdb and build a cache of stop-stop segments
-            trips = session.query(Trip).filter(Trip.route_id == '70')
+            trips = session.query(Trip)
+            #trips = session.query(Trip).filter(Trip.route_id == '70')
             for t in trips.all():
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
