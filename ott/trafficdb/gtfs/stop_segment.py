@@ -15,12 +15,11 @@ log = logging.getLogger(__file__)
 class StopSegment(Base, PatternBase):
     __tablename__ = 'traffic_stop_segments'
 
-    id = Column(String(255), primary_key=True, index=True)
     begin_stop_id = Column(String(255), index=True, nullable=False)
     end_stop_id = Column(String(255), index=True, nullable=False)
 
-    begin_time = Column(Numeric(20, 10), nullable=False)
-    end_time = Column(Numeric(20, 10), nullable=False)
+    begin_time = Column(String(9), nullable=False)
+    end_time = Column(String(9), nullable=False)
     distance = Column(Numeric(20, 10), nullable=False)
     shape_id = Column(String(255)) # note: this is a sub-shape between 2 stops
 
@@ -47,6 +46,7 @@ class StopSegment(Base, PatternBase):
     """
 
     def __init__(self, session, id, begin_stop, end_stop, trip):
+        super(StopSegment, self).__init__()
         self.id = id
         self.begin_stop_id = begin_stop.stop_id
         self.end_stop_id = end_stop.stop_id
@@ -109,10 +109,9 @@ class StopSegment(Base, PatternBase):
                 cls.clear_tables(session)
                 print(len(cache))
                 for c in cache:
-                    #session.add(c)
-                    pass
-                session.commit()
-                session.flush()
+                    # import pdb; pdb.set_trace()
+                    ss = cache[c]
+                    session.add(ss)
 
         except Exception as e:
             log.exception(e)

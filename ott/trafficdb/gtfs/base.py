@@ -1,7 +1,7 @@
 import abc
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, DateTime
 
 import logging
 log = logging.getLogger(__file__)
@@ -9,9 +9,7 @@ log = logging.getLogger(__file__)
 
 class _Base(object):
 
-    agency = Column(String, nullable=False)
-
-    id = Column(Integer, primary_key=True, nullable=False)
+    id = Column(String(255), primary_key=True, index=True)
     created = Column(DateTime, default=datetime.datetime.now())
     updated = Column(DateTime, default=datetime.datetime.now())
 
@@ -21,33 +19,6 @@ class _Base(object):
     def clear_tables(cls, session):
         log.warning("called from parent, so no idea what tables to clear")
 
-    @classmethod
-    def get_feed_type(cls, feed):
-        """
-        :param feed:
-        :return: type
-        """
-        from .stop_segment import StopSegment
-        ret_val = None
-        for entity in feed.entity:
-            if entity.HasField('stop_segment'):
-                ret_val = StopSegment
-            else:
-                continue
-            break
-        return ret_val
-
-    @classmethod
-    def parse_gtfsrt_feed(cls, session, agency, feed):
-        """
-        generic record processor
-        :returns feed header timestamp in POSIX time (i.e., number of seconds since January 1st 1970)
-        """
-        timestamp = datetime.datetime.utcfromtimestamp(feed.header.timestamp)
-        for record in feed.entity:
-            cls.parse_gtfsrt_record(session, agency, record, timestamp)
-        return feed.header.timestamp
-
     @abc.abstractmethod
     def parse_gtfsrt_record(cls, session, agency, record, timestamp):
         raise NotImplementedError("Please implement this method")
@@ -55,7 +26,7 @@ class _Base(object):
     ## TODO: all of this below is boiler plate from gtfsdb_realtime ... so let's add it to ott.utils
 
     @classmethod
-    def make_mapper(cls, tablename, column=agency):
+    def make_mapper(cls, tablename, column='id'):
         return {
             'polymorphic_on': column,
             'polymorphic_identity': tablename,
@@ -69,8 +40,9 @@ class _Base(object):
         return c
 
     def to_dict(self):
-        """ convert a SQLAlchemy object into a dict that is serializable to JSON
-        """ 
+        """
+        convert a SQLAlchemy object into a dict that is serializable to JSON
+        """
         ret_val = self.__dict__.copy()
 
         # the __dict__ on a SQLAlchemy object contains hidden crap that we delete from the class dict
@@ -88,7 +60,8 @@ class _Base(object):
 
     @classmethod
     def to_dict_list(cls, list):
-        """ apply to_dict() to all elements in list, and return new / resulting list...
+        """
+        apply to_dict() to all elements in list, and return new / resulting list...
         """
         ret_val = []
         for l in list:
@@ -99,9 +72,10 @@ class _Base(object):
 
     @classmethod
     def bulk_load(cls, engine, records, remove_old=True):
-        """ load a bunch of records at once from a list (first clearing out the table).
-            note that the records array has to be dict structures, ala
-            http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Connection.execute
+        """
+        load a bunch of records at once from a list (first clearing out the table).
+        note that the records array has to be dict structures, ala
+        http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Connection.execute
         """
         table = cls.__table__
         if remove_old:
@@ -127,6 +101,7 @@ class _Base(object):
 
     @classmethod
     def set_geometry(cls, is_geospatial=False):
+        # import pdb; pdb.set_trace()
         if is_geospatial:
             if hasattr(cls, 'add_geometry_column'):
                 cls.add_geometry_column()
