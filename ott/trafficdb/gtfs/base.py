@@ -20,10 +20,38 @@ class _Base(object):
         log.warning("called from parent, so no idea what tables to clear")
 
     @abc.abstractmethod
-    def parse_gtfsrt_record(cls, session, agency, record, timestamp):
+    def parse_transit_record(cls, session, agency, record, timestamp):
         raise NotImplementedError("Please implement this method")
 
     ## TODO: all of this below is boiler plate from gtfsdb_realtime ... so let's add it to ott.utils
+
+    @classmethod
+    def set_schema(cls, schema):
+        # if this is a database table, set the schema
+        if hasattr(cls, '__table__'):
+            cls.__table__.schema = schema
+
+        # bit of recursion to hit sub classes
+        for c in cls.__subclasses__():
+            c.set_schema(schema)
+
+    @classmethod
+    def get_schema(cls, def_val=None):
+        ret_val = def_val
+        if hasattr(cls, '__table__'):
+            ret_val = cls.__table__.schema
+        return ret_val
+
+    @classmethod
+    def set_geometry(cls, is_geospatial=False):
+        # import pdb; pdb.set_trace()
+        if is_geospatial:
+            if hasattr(cls, 'add_geometry_column'):
+                cls.add_geometry_column()
+
+            # bit of recursion to hit sub classes
+            for c in cls.__subclasses__():
+                c.set_geometry(is_geospatial)
 
     @classmethod
     def make_mapper(cls, tablename, column='id'):
@@ -71,6 +99,29 @@ class _Base(object):
         return ret_val
 
     @classmethod
+    def to_geojson(cls, session, filter=None, limit=None):
+        """
+        query the db for this 'cls' (child class), and dump out a FeatureCollection
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {"type":"Feature", "properties":{"id":"1-2"}, "geometry":{"type":"LineString","coordinates":[[-122.677388,45.522879],[-122.677396,45.522913]]}},
+            {"type":"Feature", "properties":{"id":"2-3"}, "geometry":{"type":"LineString","coordinates":[[-122.675715,45.522215],[-122.67573,45.522184]]}},
+          ]
+        }
+        """
+        features = session.query(cls.id, cls.geom.ST_AsGeoJSON()).all()
+        ln = len(features) - 1
+        featgeo = ""
+        for i, f in enumerate(features):
+            comma = ",\n" if i < ln else "\n"
+            featgeo += '    {{"type": "Feature", "properties": {{"id": "{}"}}, "geometry": {}}}{}'.format(f[0], f[1], comma)
+
+        geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n  {}  ]\n}}'.format(featgeo)
+        return geojson
+
+
+    @classmethod
     def bulk_load(cls, engine, records, remove_old=True):
         """
         load a bunch of records at once from a list (first clearing out the table).
@@ -81,34 +132,6 @@ class _Base(object):
         if remove_old:
             engine.execute(table.delete())
         engine.execute(table.insert(), records)
-
-    @classmethod
-    def set_schema(cls, schema):
-        # if this is a database table, set the schema
-        if hasattr(cls, '__table__'):
-            cls.__table__.schema = schema
-
-        # bit of recursion to hit sub classes
-        for c in cls.__subclasses__():
-            c.set_schema(schema)
-
-    @classmethod
-    def get_schema(cls, def_val=None):
-        ret_val = def_val
-        if hasattr(cls, '__table__'):
-            ret_val = cls.__table__.schema
-        return ret_val
-
-    @classmethod
-    def set_geometry(cls, is_geospatial=False):
-        # import pdb; pdb.set_trace()
-        if is_geospatial:
-            if hasattr(cls, 'add_geometry_column'):
-                cls.add_geometry_column()
-
-            # bit of recursion to hit sub classes
-            for c in cls.__subclasses__():
-                c.set_geometry(is_geospatial)
 
 
 Base = declarative_base(cls=_Base)

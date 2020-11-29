@@ -33,34 +33,6 @@ class Database(object):
         Base.metadata.create_all(bind=self.engine)
 
     @property
-    def session(self):
-        session = self.Session()
-        return session
-
-    def _make_session_class(self, extension=None):
-        """
-        this makes the Session() class ... the extension is for things like
-        :see http://docs.sqlalchemy.org/en/latest/orm/contextual.html?highlight=scoped%20session :
-        :see https://www.programcreek.com/python/example/97518/zope.sqlalchemy.ZopeTransactionExtension :
-        """
-        self.session_factory = sessionmaker(bind=self.engine, extension=extension)
-        self.Session = scoped_session(self.session_factory)
-
-    @classmethod
-    def make_session(cls, url, schema, is_geospatial=False, create_db=False, prep_gtfsdb=True):
-        # note: include all ORM objects here, so the db finds them
-        from .stop_segment import StopSegment
-
-        if cls.db_singleton is None:
-            cls.db_singleton = Database(url, schema, is_geospatial)
-            if create_db:
-                cls.db_singleton.create()
-            if prep_gtfsdb:
-                import gtfsdb
-                gtfsdb.Database.prep_gtfsdb_model_classes(schema, is_geospatial)
-        return cls.db_singleton.session
-
-    @property
     def is_geospatial(self):
         return self._is_geospatial
 
@@ -84,6 +56,34 @@ class Database(object):
                 self.engine.execute(CreateSchema(self._schema))
         except Exception as e:
             log.info("NOTE: couldn't create schema {0} (schema might already exist)\n{1}".format(self._schema, e))
+
+    def _make_session_class(self, extension=None):
+        """
+        this makes the Session() class ... the extension is for things like
+        :see http://docs.sqlalchemy.org/en/latest/orm/contextual.html?highlight=scoped%20session :
+        :see https://www.programcreek.com/python/example/97518/zope.sqlalchemy.ZopeTransactionExtension :
+        """
+        self.session_factory = sessionmaker(bind=self.engine, extension=extension)
+        self.Session = scoped_session(self.session_factory)
+
+    @property
+    def session(self):
+        session = self.Session()
+        return session
+
+    @classmethod
+    def make_session(cls, url, schema, is_geospatial=False, create_db=False, prep_gtfsdb=True):
+        # note: include all ORM objects here, so the db finds them
+        from .stop_segment import StopSegment
+
+        if cls.db_singleton is None:
+            cls.db_singleton = Database(url, schema, is_geospatial)
+            if create_db:
+                cls.db_singleton.create()
+            if prep_gtfsdb:
+                import gtfsdb
+                gtfsdb.Database.prep_gtfsdb_model_classes(schema, is_geospatial)
+        return cls.db_singleton.session
 
     @classmethod
     def connection(cls, raw_con, connection_record):

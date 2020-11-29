@@ -1,7 +1,7 @@
 vendor*
 .eggs
 [a-z].py
-[a-z].json
+[a-z].*json
 *.py[cod]
 .settings
 COMMIT_EDITMSG

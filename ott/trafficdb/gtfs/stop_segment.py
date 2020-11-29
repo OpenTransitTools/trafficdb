@@ -115,7 +115,6 @@ class StopSegment(Base, PatternBase):
         except Exception as e:
             log.exception(e)
 
-
     @classmethod
     def clear_tables(cls, session):
         """
