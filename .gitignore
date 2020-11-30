@@ -1,8 +1,9 @@
+# junk & crap
 vendor*
 .eggs
 [a-z].py
 [a-z].*json
-segments.geojsonh
+segments.geojson
 *.py[cod]
 .settings
 COMMIT_EDITMSG
@@ -14,7 +15,7 @@ nohup.out
 .*#
 .#*
 *#
-#*
+\#*
 .*~
 *~
 *.DS_*
@@ -22,6 +23,7 @@ nohup.out
 x
 o
 n
+?.tar
 
 *.properties
 *.classpath

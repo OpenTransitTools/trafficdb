@@ -33,6 +33,7 @@
         buffer: 0,
         maxzoom: 20
       });
+
       map.addLayer({
         'id': 'segments',
         'type': 'line',
@@ -42,9 +43,22 @@
           'line-cap': 'round'
         },
         'paint': {
-          'line-color': '#19AA20',
-          'line-width': 5
-        }
+          'line-opacity': 0.8,
+          'line-color': '#ece90d',
+          'line-width': 4
+        },
+        'filter': ['==', '$type', 'LineString']
+      });
+
+      map.addLayer({
+        'id': 'stops',
+        'type': 'circle',
+        'source': 'segments',
+        'paint': {
+          'circle-color': '#bfec46',
+          'circle-radius': 4
+        },
+        'filter': ['==', '$type', 'Point']
       });
 
       map.addLayer({
@@ -52,8 +66,9 @@
         'type': 'line',
         'source': 'segments',
         'paint': {
-          'line-color': '#EE1B51',
-          'line-width': 7
+          'line-opacity': 0.9,
+          'line-color': '#ec352a',
+          'line-width': 4
         },
         'filter': ['in', 'id', '']
       });
