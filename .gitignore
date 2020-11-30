@@ -2,6 +2,7 @@ vendor*
 .eggs
 [a-z].py
 [a-z].*json
+segments.geojsonh
 *.py[cod]
 .settings
 COMMIT_EDITMSG
