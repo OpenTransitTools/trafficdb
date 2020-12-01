@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Numeric
+from sqlalchemy import Column, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 
 from gtfsdb import Trip
 from gtfsdb import Shape
+from gtfsdb import Stop
 from gtfsdb import PatternBase
 
 from ott.trafficdb.gtfs.base import Base
@@ -20,7 +21,31 @@ class StopSegment(Base, PatternBase):
     begin_time = Column(String(9), nullable=False)
     end_time = Column(String(9), nullable=False)
     distance = Column(Numeric(20, 10), nullable=False)
-    shape_id = Column(String(255)) # note: this is a sub-shape between 2 stops
+    shape_id = Column(String(255), ForeignKey(Shape.shape_id)) # note: this is a sub-shape between 2 stops
+
+    ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
+    """
+    '''
+    begin_stop = relationship(
+        'Stop',
+        primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
+        foreign_keys='(StopSegment.begin_stop_id)',
+        uselist=False, viewonly=True
+    )
+
+    end_stop = relationship(
+        'Stop',
+        primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
+        foreign_keys='(StopSegment.end_stop_id)',
+        uselist=False, viewonly=True
+    )
+    '''
+    shapes = relationship(
+        Shape,
+        primaryjoin='Shape.shape_id==StopSegment.shape_id',
+        foreign_keys='(Shape.shape_id)',
+        uselist=True, viewonly=True)
+    """
 
     def __init__(self, session, id, begin_stop, end_stop, trip):
         super(StopSegment, self).__init__()
@@ -34,27 +59,6 @@ class StopSegment(Base, PatternBase):
         if hasattr(self, 'geom'):
             q = self._make_shapes(session, begin_stop, end_stop, trip)
             self.geom_from_shape(q)
-
-        ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
-        self.begin_stop = relationship(
-            'Stop',
-            primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
-            foreign_keys='(StopSegment.begin_stop_id)',
-            uselist=False, viewonly=True
-        )
-
-        self.end_stop = relationship(
-            'Stop',
-            primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
-            foreign_keys='(StopSegment.end_stop_id)',
-            uselist=False, viewonly=True
-        )
-
-        self.shapes = relationship(
-            'Shape',
-            primaryjoin='Shape.shape_id==StopSegment.shape_id',
-            foreign_keys='(Shape.shape_id)',
-            uselist=True, viewonly=True)
 
     @classmethod
     def _make_shapes(cls, session, begin_stop, end_stop, trip):
@@ -121,3 +125,40 @@ class StopSegment(Base, PatternBase):
         clear out stop segments
         """
         session.query(StopSegment).delete()
+
+    @classmethod
+    def to_geojson(cls, session):
+        """
+        override the default to_geojson
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {"type":"Feature", "properties":{"id":"1-2"}, "geometry":{"type":"LineString","coordinates":[[-122.677388,45.522879],[-122.677396,45.522913]]}},
+            {"type":"Feature", "properties":{"id":"2-3"}, "geometry":{"type":"LineString","coordinates":[[-122.675715,45.522215],[-122.67573,45.522184]]}},
+          ]
+        }
+        """
+        feature_tmpl = '    {{"type": "Feature", "properties": {{"id": "{}"}}, "geometry": {}}}{}'
+
+        stop_cache ={}
+        stops = session.query(Stop.stop_id, Stop.geom.ST_AsGeoJSON()).all()
+        for s in stops:
+            stop_cache[s[0]] = s[1]
+
+        features = session.query(StopSegment.id, StopSegment.geom.ST_AsGeoJSON(),
+                                 StopSegment.begin_stop_id, StopSegment.end_stop_id).all()
+        ln = len(features) - 1
+        featgeo = ""
+        last_stop = "xxx"
+        for i, f in enumerate(features):
+            comma = ",\n" if i < ln else "\n"
+            #import pdb; pdb.set_trace()
+            id = f[0]; geom = f[1]; begin_stop_id = f[2]; end_stop_id = f[3];
+            if last_stop != begin_stop_id:
+                featgeo += feature_tmpl.format(begin_stop_id, stop_cache[begin_stop_id], ",\n")
+            featgeo += feature_tmpl.format(id, geom, ",\n")
+            featgeo += feature_tmpl.format(end_stop_id, stop_cache[end_stop_id], comma)
+            last_stop = end_stop_id
+
+        geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n  {}  ]\n}}'.format(featgeo)
+        return geojson

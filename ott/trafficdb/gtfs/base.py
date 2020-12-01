@@ -99,7 +99,7 @@ class _Base(object):
         return ret_val
 
     @classmethod
-    def to_geojson(cls, session, filter=None, limit=None):
+    def to_geojson(cls, session):
         """
         query the db for this 'cls' (child class), and dump out a FeatureCollection
         {
@@ -110,16 +110,16 @@ class _Base(object):
           ]
         }
         """
+        feature_tmpl = '    {{"type": "Feature", "properties": {{"id": "{}"}}, "geometry": {}}}{}'
         features = session.query(cls.id, cls.geom.ST_AsGeoJSON()).all()
         ln = len(features) - 1
         featgeo = ""
         for i, f in enumerate(features):
             comma = ",\n" if i < ln else "\n"
-            featgeo += '    {{"type": "Feature", "properties": {{"id": "{}"}}, "geometry": {}}}{}'.format(f[0], f[1], comma)
+            featgeo += feature_tmpl.format(f[0], f[1], comma)
 
         geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n  {}  ]\n}}'.format(featgeo)
         return geojson
-
 
     @classmethod
     def bulk_load(cls, engine, records, remove_old=True):
