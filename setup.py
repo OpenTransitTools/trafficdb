@@ -55,7 +55,8 @@ setup(
         [console_scripts]
         get_inrix_token = ott.trafficdb.inrix.base:main
 
-        speeds-load = ott.trafficdb.loader:main
+        load-speed-data = ott.trafficdb.loader:load_speed_data
+        load-gtfs-and-speed-data = ott.trafficdb.loader:load_gtfs_and_speed_data
         geojson-segments = ott.trafficdb.loader:segments_to_geojson
     """,
 )
