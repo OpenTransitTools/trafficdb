@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TriMet - TileServer GL</title>
+  <title>Stop Segments - TriMet</title>
   <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox-gl.css" />
   <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox.css" />
   <script src="https://tiles.trimet.org/mapbox-gl.js"></script>
@@ -43,7 +43,7 @@
           'line-cap': 'round'
         },
         'paint': {
-          'line-opacity': 0.8,
+          'line-opacity': 0.6,
           'line-color': '#ece90d',
           'line-width': 4
         },
@@ -56,7 +56,7 @@
         'source': 'segments',
         'paint': {
           'circle-color': '#bfec46',
-          'circle-radius': 4
+          'circle-radius': { stops: [[8, 0.5], [11, 3], [16, 6]] }
         },
         'filter': ['==', '$type', 'Point']
       });
@@ -81,7 +81,7 @@
             'symbol-placement': 'line',
             'text-font': ['Open Sans Regular'],
             'text-field': ['get', 'id'],
-            'text-size': 22
+            'text-size': { stops: [[8, 2], [11, 12], [16, 18]] }
         },
         'filter': ['in', 'id', '']
       });
@@ -115,22 +115,35 @@
         popup.remove();
       });
 
+      // cycle thru lines by multiple repeated clicks to same map section
+      var f = null;
+      var i = 0;
+      const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
       map.on('click', function (e) {
         // set bbox as 5px reactangle area around clicked point
         var bbox = [
           [e.point.x - 5, e.point.y - 5],
           [e.point.x + 5, e.point.y + 5]
         ];
-        var features = map.queryRenderedFeatures(bbox, {
-          layers: ['segments']
-        });
+        var features = map.queryRenderedFeatures(bbox, { layers: ['segments']});
 
-        // Run through the selected features and set a filter
-        // to match features with unique id codes to activate
-        // the `counties-highlighted` layer.
+        //debugger;
+        if(i < features.length && equals(f, features)) {
+          features = [f[i]];
+          i++;
+        } else {
+          f = features;
+          i = 0;
+        }
+
+        // Run through the selected features and set a filter to match features with unique id
+        // codes to activate the `counties-highlighted` layer.
+        // console.log(features);
         var filter = features.reduce(
           function (memo, feature) {
-            memo.push(feature.properties.id);
+            var id = feature.properties.id;
+            memo.push(id);
             return memo;
           },
           ['in', 'id']
