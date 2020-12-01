@@ -75,6 +75,7 @@ class Database(object):
     def make_session(cls, url, schema, is_geospatial=False, create_db=False, prep_gtfsdb=True):
         # note: include all ORM objects here, so the db finds them
         from .stop_segment import StopSegment
+        from .stop_segment_trip import StopSegmentTrip
 
         if cls.db_singleton is None:
             cls.db_singleton = Database(url, schema, is_geospatial)

@@ -13,17 +13,19 @@ class _Base(object):
     created = Column(DateTime, default=datetime.datetime.now())
     updated = Column(DateTime, default=datetime.datetime.now())
 
-    lang = "en"
-
-    @classmethod
-    def clear_tables(cls, session):
-        log.warning("called from parent, so no idea what tables to clear")
+    def __init__(self):
+        self.updated = datetime.datetime.now()
 
     @abc.abstractmethod
-    def parse_transit_record(cls, session, agency, record, timestamp):
+    def parse_record(cls, session, record, timestamp):
         raise NotImplementedError("Please implement this method")
 
     ## TODO: all of this below is boiler plate from gtfsdb_realtime ... so let's add it to ott.utils
+
+    @classmethod
+    def clear_tables(cls, session):
+        log.info("clearing table {}".format(cls.__name__))
+        session.query(cls).delete()
 
     @classmethod
     def set_schema(cls, schema):

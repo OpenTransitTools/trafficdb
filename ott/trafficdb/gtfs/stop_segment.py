@@ -21,7 +21,7 @@ class StopSegment(Base, PatternBase):
     begin_time = Column(String(9), nullable=False)
     end_time = Column(String(9), nullable=False)
     distance = Column(Numeric(20, 10), nullable=False)
-    shape_id = Column(String(255), ForeignKey(Shape.shape_id)) # note: this is a sub-shape between 2 stops
+    shape_id = Column(String(255)) # note: the actual geom is only a partial shape .. line between the two stops
 
     ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
     """
@@ -40,6 +40,7 @@ class StopSegment(Base, PatternBase):
         uselist=False, viewonly=True
     )
     '''
+    shape_id = Column(String(255), ForeignKey(Shape.shape_id))
     shapes = relationship(
         Shape,
         primaryjoin='Shape.shape_id==StopSegment.shape_id',
@@ -73,58 +74,84 @@ class StopSegment(Base, PatternBase):
         return ret_val
 
     @classmethod
-    def _cache_segment(cls, session, cache, begin_stop, end_stop, trip):
+    def _cache_segment(cls, session, begin_stop, end_stop, trip, segment_cache, segment_trip_cache):
+        # step 1: make segment id
         id = "{}-{}".format(begin_stop.stop_id, end_stop.stop_id)
-        if id not in cache:
-            ss = cls(session, id, begin_stop, end_stop, trip)
-            cache[id] = ss
+
+        # step 2: make / update segment
+        stop_segment = None
+        if id not in segment_cache:
+            stop_segment = cls(session, id, begin_stop, end_stop, trip)
+            segment_cache[id] = stop_segment
         else:
+            stop_segment = segment_cache[id]
+
             # check for earlier segment begin_time than what's cached
-            if begin_stop.arrival_time < cache[id].begin_time:
-                cache[id].begin_time = begin_stop.arrival_time
+            if begin_stop.arrival_time < stop_segment.begin_time:
+                stop_segment.begin_time = begin_stop.arrival_time
             # check for later segment end_time than what's cached
-            if end_stop.departure_time > cache[id].end_time:
-                cache[id].end_time = end_stop.departure_time
+            if end_stop.departure_time > stop_segment.end_time:
+                stop_segment.end_time = end_stop.departure_time
+
+        # step 3: create trip record for this segment
+        # note:  use of hash will filter out trips (thus sst records) that loop back on same segment
+        # import pdb; pdb.set_trace()
+        if segment_trip_cache is not None:
+            from .stop_segment_trip import StopSegmentTrip
+            sst = StopSegmentTrip(session, stop_segment, trip)
+            segment_trip_cache[sst.id] = sst
 
     @classmethod
-    def load(cls, session):
+    def load(cls, session, do_trip_segments=True, chunk_size=10000, print_status=True):
         """
-        will find ...
+        will find all stop-stop pairs from stop_times/trip data, and create stop-stop segments in the database
         """
-        cache = {}
+        # import pdb; pdb.set_trace()
         try:
+            segment_cache = {}
+            trip_cache = {} if do_trip_segments else None
+
             # step 1: query gtfsdb and build a cache of stop-stop segments
             trips = session.query(Trip)
-            #trips = session.query(Trip).filter(Trip.route_id == '70')
-            for t in trips.all():
+            #trips = session.query(Trip).filter(Trip.route_id == '57')
+            for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
                 if stop_times_len > 1:
+                    if print_status and j % chunk_size == 0:
+                        print('.', end='', flush=True)
                     for i, st in enumerate(stop_times):
                         begin_stop = stop_times[i]
                         end_stop = stop_times[i+1]
-                        cls._cache_segment(session, cache, begin_stop, end_stop, t)
+                        cls._cache_segment(session, begin_stop, end_stop, t, segment_cache, trip_cache)
                         if i+2 >= stop_times_len:
                             break
 
-            # step 2: write this cache to db
-            if len(cache) > 0:
+            # step 2: write the stop_segment data to db
+            if len(segment_cache) > 0:
+                # step 2a: clear old segment data from db
+                from .stop_segment_trip import StopSegmentTrip
+                if print_status: print(" ")
+                StopSegmentTrip.clear_tables(session)
                 cls.clear_tables(session)
-                print(len(cache))
-                for c in cache:
-                    # import pdb; pdb.set_trace()
-                    ss = cache[c]
-                    session.add(ss)
+
+                if print_status: print("There are {:,} stop to stop segments".format(len(segment_cache)))
+                session.add_all(segment_cache.values())
+                session.flush()
+                session.commit()
+                session.flush()
+
+                # step 3: write the stop_segment_trip data to db
+                if trip_cache and len(trip_cache) > 0:
+                    segment_trip_cache = list(trip_cache.values())
+                    if print_status: print("and {:,} trips cross these segments".format(len(segment_trip_cache)))
+                    for i in range(0, len(segment_trip_cache), chunk_size):
+                        chunk = segment_trip_cache[i:i + chunk_size]
+                        if print_status: print('.', end='', flush=True)
+                        session.bulk_save_objects(chunk)
 
         except Exception as e:
             log.exception(e)
-
-    @classmethod
-    def clear_tables(cls, session):
-        """
-        clear out stop segments
-        """
-        session.query(StopSegment).delete()
 
     @classmethod
     def to_geojson(cls, session):
