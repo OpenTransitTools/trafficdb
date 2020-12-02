@@ -47,7 +47,7 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
 
     # step 1: reload gtfsdb
     args, kwargs = get_args()
-    if args.file not in "skip":
+    if args.file not in "skippp":
         database_load(args.file, **kwargs)
         pass
 
