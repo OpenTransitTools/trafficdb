@@ -172,6 +172,7 @@ class StopSegment(Base, PatternBase):
         for s in stops:
             stop_cache[s[0]] = s[1]
 
+        #import pdb; pdb.set_trace()
         features = session.query(StopSegment.id, StopSegment.geom.ST_AsGeoJSON(),
                                  StopSegment.begin_stop_id, StopSegment.end_stop_id).all()
         ln = len(features) - 1
@@ -179,7 +180,6 @@ class StopSegment(Base, PatternBase):
         last_stop = "xxx"
         for i, f in enumerate(features):
             comma = ",\n" if i < ln else "\n"
-            #import pdb; pdb.set_trace()
             id = f[0]; geom = f[1]; begin_stop_id = f[2]; end_stop_id = f[3];
             if last_stop != begin_stop_id:
                 featgeo += feature_tmpl.format(begin_stop_id, stop_cache[begin_stop_id], ",\n")

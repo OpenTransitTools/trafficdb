@@ -1,10 +1,11 @@
 from ott.utils.parse.cmdline import db_cmdline
 from ott.utils.config_util import ConfigUtil
 from ott.utils import string_utils
+from ott.utils import file_utils
+from ott.utils import exe_utils
 
 from ott.trafficdb.gtfs.database import Database
 from ott.trafficdb.gtfs.stop_segment import StopSegment
-from geoalchemy2.functions import ST_AsGeoJSON
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -46,16 +47,30 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
 
     # step 1: reload gtfsdb
     args, kwargs = get_args()
-    database_load(args.file, **kwargs)
+    if args.file not in "skip":
+        database_load(args.file, **kwargs)
 
     # step 2: load stop segments
-    session = Database.make_session(args.database_url, args.schema, args.is_geospatial, args.create)
-    StopSegment.load(session)
-    session.commit()
-    session.flush()
+    if args.file not in "skip":
+        session = Database.make_session(args.database_url, args.schema, args.is_geospatial, create_db=True)
+        StopSegment.load(session)
+        session.commit()
+        session.flush()
+    else:
+        session = Database.make_session(args.database_url, args.schema, args.is_geospatial)
 
     # step 3: speed data ....
     pass # TODO
+
+    # step 4: output geojson for map
+    geojson = StopSegment.to_geojson(session)
+    dir = "ott/trafficdb/examples"
+    file = "segments.geojson"
+    file_utils.cat(dir, file, geojson)
+
+    # step 5: start simple server & open the browser to the map
+    print("run simple python server and open map")
+    exe_utils.run_cmd("scripts/start_static.sh", shell_script=True)
 
 
 def segments_to_geojson():
