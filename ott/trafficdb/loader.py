@@ -49,6 +49,7 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
     args, kwargs = get_args()
     if args.file not in "skip":
         database_load(args.file, **kwargs)
+        pass
 
     # step 2: load stop segments
     if args.file not in "skip":
