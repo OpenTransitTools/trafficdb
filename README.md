@@ -9,7 +9,8 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
  - cd trafficdb
  - buildout
  - bin/load-gtfs-and-speed-data -c -g -s tm -d postgres://localhost/ott https://developer.trimet.org/schedule/gtfs.zip
- # note the load will take upwards of 1 hour ... but once done, you'll have a complete database with speed data
+ 
+ note the load will take upwards of 1 hour ... but once done, you'll have a complete database with speed data
  
 ## Todo:
  - speed and osm data (example datasets) needed to complete things
