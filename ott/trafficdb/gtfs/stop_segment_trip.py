@@ -12,6 +12,8 @@ class StopSegmentTrip(Base):
 
     segment_id = Column(String(255), index=True, nullable=False)
     trip_id = Column(String(255), index=True, nullable=False)
+    shape_id = Column(String(255), nullable=False)
+    service_id = Column(String(255), nullable=False)
     route_id = Column(String(255), nullable=False)
     mode = Column(String(255))
 
@@ -36,5 +38,7 @@ class StopSegmentTrip(Base):
         self.id = "{}-{}".format(segment.id, trip.trip_id)
         self.segment_id = segment.id
         self.trip_id = trip.trip_id
+        self.shape_id = trip.shape_id
+        self.service_id = trip.service_id
         self.route_id = trip.route.route_id
         self.mode = trip.route.type.otp_type
