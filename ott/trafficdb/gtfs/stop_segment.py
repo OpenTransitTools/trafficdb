@@ -22,6 +22,8 @@ class StopSegment(Base, PatternBase):
     end_time = Column(String(9), nullable=False)
     distance = Column(Numeric(20, 10), nullable=False)
     shape_id = Column(String(255)) # note: the actual geom is only a partial shape .. line between the two stops
+    begin_distance = Column(Numeric(20, 10), nullable=False)
+    end_distance = Column(Numeric(20, 10), nullable=False)
 
     ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
     """
@@ -57,6 +59,8 @@ class StopSegment(Base, PatternBase):
         self.end_time = end_stop.departure_time
         self.distance = end_stop.shape_dist_traveled - begin_stop.shape_dist_traveled
         self.shape_id = trip.shape_id
+        self.begin_distance = begin_stop.shape_dist_traveled
+        self.end_distance = end_stop.shape_dist_traveled
         if hasattr(self, 'geom'):
             q = self._make_shapes(session, begin_stop, end_stop, trip)
             self.geom_from_shape(q)
@@ -70,7 +74,8 @@ class StopSegment(Base, PatternBase):
         ret_val = session.query(Shape) \
             .filter(Shape.shape_id == trip.shape_id) \
             .filter(Shape.shape_dist_traveled >= begin_stop.shape_dist_traveled) \
-            .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled)
+            .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled) \
+            .order_by(Shape.shape_pt_sequence)
         return ret_val
 
     @classmethod
@@ -113,8 +118,8 @@ class StopSegment(Base, PatternBase):
 
             # step 1: query gtfsdb and build a cache of stop-stop segments
             trips = session.query(Trip)
-            # trips = session.query(Trip).filter(Trip.route_id == '57')
-            # trips = session.query(Trip).filter(Trip.route_id == '17')
+            #trips = session.query(Trip).filter(Trip.route_id == '57')
+            #trips = session.query(Trip).filter(Trip.route_id == '17')
             for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
