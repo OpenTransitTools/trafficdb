@@ -156,13 +156,25 @@
         window.open(url, "_blank");
       });
 
+      var popup = new mapboxgl.Popup({closeOnClick: false});
+      map.on('contextmenu', function(e) {
+        tooltip.remove();
+
+        var coord = e.lngLat;
+        var sv = '<iframe width="420" height="280" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" ' +
+        'src="https://maps.google.com/maps?output=svembed&amp;&amp;layer=c&amp;cbp=13,,,,&amp;' +
+        'cbll=' + coord.lat + ',' + coord.lng + '&amp;ll=' + coord.lat + ',' + coord.lng + '&amp;z=17"></iframe>' +
+        "location: " + coord.lat + ',' + coord.lng;
+
+        popup.setLngLat(coord).setMaxWidth("450px").setHTML(sv).addTo(map);
+      });
+
       // cycle thru lines by multiple repeated clicks to same map section
       var f = null;
       var i = 0;
       const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
       map.on('click', function (e) {
-        tooltip.remove();
 
         // set bbox as 5px reactangle area around clicked point
         var bbox = [
@@ -172,12 +184,17 @@
         var features = map.queryRenderedFeatures(bbox, { layers: ['segments']});
 
         //debugger;
-        if(i < features.length && equals(f, features)) {
-          features = [f[i]];
-          i++;
-        } else {
-          f = features;
-          i = 0;
+        if(features && features.length > 0) {
+          popup.remove();
+          tooltip.remove();
+
+          if (i < features.length && equals(f, features)) {
+            features = [f[i]];
+            i++;
+          } else {
+            f = features;
+            i = 0;
+          }
         }
 
         // Run through the selected features and set a filter to match features with unique id
