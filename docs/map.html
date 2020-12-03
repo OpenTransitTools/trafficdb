@@ -9,24 +9,59 @@
   <script src="https://tiles.trimet.org/mapbox-gl.js"></script>
   <script src="https://tiles.trimet.org/mapbox.js"></script>
   <script src="https://tiles.trimet.org/leaflet-hash.js"></script>
+  <script src="https://joxit.dev/pelias-mapbox-gl-js/pelias-geocoder.js"></script>
+  <link   href='https://joxit.dev/pelias-mapbox-gl-js/pelias-geocoder.css' rel='stylesheet'  type='text/css'/>
   <style>
     body { margin:0; padding:0; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
+    .pelias-ctrl input {
+      font: 400 12px 'Roboto Regular', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    }
+    .marker-arrow {
+      width: 30px;
+      height: 30px;
+      border-radius: 50% 50% 50% 0;
+      background-color: #ec8100;
+      transform: rotate(-45deg);
+      margin: -36px 0 0 0;
+    }
+    .marker-arrow::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      margin: 8px 0 0 8px;
+      background-color: #fff;
+      position: absolute;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
   <h1 style="display:none;">TriMet Stop Segments</h1>
   <div id='map'></div>
   <script>
-    var q = (location.search || '').substr(1).split('&');
-    mapboxgl.setRTLTextPlugin('https://tiles.trimet.org/mapbox-gl-rtl-text.js');
     var map = new mapboxgl.Map({
       container: 'map',
       style: 'https://tiles.trimet.org/styles/trimet/style.json',
       hash: true
     });
     map.addControl(new mapboxgl.NavigationControl());
+
     map.on('load', function () {
+      var iconMarkerEl = document.createElement("div");
+      iconMarkerEl.innerHTML = "<div class='marker-arrow'></div>" + "<div class='marker-pulse'></div>";
+
+      map.addControl(new PeliasGeocoder({
+        url: 'https://ws.trimet.org/peliaswrap/v1',
+        flyTo: 'hybrid',
+        useFocusPoint: true,
+        marker: {
+          icon: iconMarkerEl,
+          multiple: false
+        },
+        customAttribution: 'Powered bi Frank OpenTransitTools'
+      }));
+
       map.addSource('segments', {
         type: 'geojson',
         data: 'segments.geojson',
@@ -86,7 +121,7 @@
         'filter': ['in', 'id', '']
       });
 
-      var popup = new mapboxgl.Popup({
+      var tooltip = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false
       });
@@ -107,12 +142,12 @@
 
         // Populate the popup and set its coordinates
         // based on the feature found.
-        popup.setLngLat(coordinates).setHTML(description).addTo(map);
+        tooltip.setLngLat(coordinates).setHTML(description).addTo(map);
       });
 
       map.on('mouseleave', 'stops', function () {
          map.getCanvas().style.cursor = '';
-        popup.remove();
+        tooltip.remove();
       });
 
       map.on('dblclick', 'stops', function (e) {
@@ -127,6 +162,8 @@
       const equals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
       map.on('click', function (e) {
+        tooltip.remove();
+
         // set bbox as 5px reactangle area around clicked point
         var bbox = [
           [e.point.x - 5, e.point.y - 5],

@@ -1,7 +1,7 @@
 PORT=8000
 
 DIR=`dirname $0`
-cd $DIR/../ott/trafficdb/examples/
+cd $DIR/../docs/
 
 URL=http://localhost:$PORT/map.html#10.00/45.48/-122.68/0/20
 echo $URL
