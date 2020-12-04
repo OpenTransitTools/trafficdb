@@ -12,6 +12,16 @@ import logging
 log = logging.getLogger(__file__)
 
 
+# todo: make util ... py2 and py3
+def printer(content, end='\n', flush=False, do_print=True):
+    try:
+        if do_print:
+            pass #print(content, end=end, flush=flush)
+    except:
+        # if here ... py 2.x 
+        print(content)
+
+
 class StopSegment(Base, PatternBase):
     __tablename__ = 'traffic_stop_segments'
 
@@ -107,7 +117,7 @@ class StopSegment(Base, PatternBase):
             segment_trip_cache[sst.id] = sst
 
     @classmethod
-    def load(cls, session, do_trip_segments=True, chunk_size=10000, print_status=True):
+    def load(cls, session, do_trip_segments=True, chunk_size=10000, do_print=True):
         """
         will find all stop-stop pairs from stop_times/trip data, and create stop-stop segments in the database
         """
@@ -124,8 +134,7 @@ class StopSegment(Base, PatternBase):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
                 if stop_times_len > 1:
-                    if print_status and j % chunk_size == 0:
-                        print('.', end='', flush=True)
+                    printer('.', end='', flush=True, do_print=do_print and j % chunk_size == 0)
                     for i, st in enumerate(stop_times):
                         begin_stop = stop_times[i]
                         end_stop = stop_times[i+1]
@@ -137,11 +146,11 @@ class StopSegment(Base, PatternBase):
             if len(segment_cache) > 0:
                 # step 2a: clear old segment data from db
                 from .stop_segment_trip import StopSegmentTrip
-                if print_status: print(" ")
+                printer(" ", do_print=do_print)
                 StopSegmentTrip.clear_tables(session)
                 cls.clear_tables(session)
 
-                if print_status: print("There are {:,} stop to stop segments".format(len(segment_cache)))
+                printer("There are {:,} stop to stop segments".format(len(segment_cache)), do_print=do_print)
                 session.add_all(segment_cache.values())
                 session.flush()
                 session.commit()
@@ -150,10 +159,10 @@ class StopSegment(Base, PatternBase):
                 # step 3: write the stop_segment_trip data to db
                 if trip_cache and len(trip_cache) > 0:
                     segment_trip_cache = list(trip_cache.values())
-                    if print_status: print("and {:,} trips cross these segments".format(len(segment_trip_cache)))
+                    printer("and {:,} trips cross these segments".format(len(segment_trip_cache)), do_print=do_print)
                     for i in range(0, len(segment_trip_cache), chunk_size):
                         chunk = segment_trip_cache[i:i + chunk_size]
-                        if print_status: print('.', end='', flush=True)
+                        printer('.', end='', flush=True, do_print=do_print)
                         session.bulk_save_objects(chunk)
 
         except Exception as e:
