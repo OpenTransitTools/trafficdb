@@ -1,13 +1,29 @@
+##
+## geojson -> postgis load script via ogr2ogr
+## note: it should be generic to bring any geojson file in, but is written with INRIX in mind
+##
 DIR=`dirname $0`
 
 name=${DB_NAME:=ott}
 user=${DB_USER:=ott}
 schema=${DB_SCHEMA:=trimet}
-geojson_file=${1:-"$DIR/test/inrix.geojson"}
+table_name=${TABLE_NAME:=traffic_inrix_segments}
+geojson_files=${*:-"$DIR/test/inrix.geojson"}
 
 db_opts="-f 'PostgreSQL' PG:'dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
-table_name="-nln traffic_inrix_segments"
+table_cmd="-nln $table_name"
+overwrite="-overwrite"
 
-cmd="ogr2ogr $db_opts $table_name -overwrite $geojson_file"
-echo $cmd
-eval $cmd
+##
+## will iterate over one or more geojson files, and import them all into a table name
+## NOTES:
+## explode multilinestrings into linestrings use switch -explodecollections.
+##
+for f in $geojson_files
+do
+  cmd="ogr2ogr $db_opts $table_cmd $overwrite -explodecollections $f"
+  echo $cmd
+  eval $cmd
+  overwrite=""
+done
+

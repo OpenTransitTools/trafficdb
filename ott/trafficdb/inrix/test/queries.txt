@@ -1,0 +1,17 @@
+SELECT a.id, b.xdsegid
+FROM trimet.traffic_stop_segments a, trimet.traffic_inrix_segments b
+WHERE ST_DWithin(a.geom, b.geom, 100);
+
+SELECT a.id, b.xdsegid
+FROM trimet.traffic_stop_segments a, trimet.traffic_inrix_segments b
+WHERE ST_HausdorffDistance(a.geom, b.geom) < 10;
+
+
+SELECT --count(*)
+a.id, st_astext(st_makeline(ST_Intersection(a.geom, b.geom)))
+FROM trimet.traffic_stop_segments a, trimet.traffic_inrix_segments b
+WHERE st_intersects(a.geom, b.geom)
+--and not ST_IsEmpty(ST_Buffer(ST_Intersection(a.geom, b.geom), 1.0));
+and (st_length(st_makeline(ST_Intersection(st_buffer(a.geom, 1.0), b.geom))) > 0.010 )
+group by a.id
+
