@@ -7,6 +7,7 @@ README = open(os.path.join(here, 'README.md')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
+    'venusian==1.2.0',
     'ott.utils',
     'gtfsdb',
     'geoalchemy2',
