@@ -12,15 +12,13 @@ INRIX data ingestion steps:
 
  - INRIX account access:
     - you will need 2 different authentication credentials
-    - map data:
-      - for things like the .geojson or .csv file of INRIX XD street segments
-      - https://map-data-downloader.inrix.com
-      - the INRIX sales rep authorized my uname to access the above url (it's my email address -- so this is a personal account)
-      - INRIX's map-data-downloader site allows one to manually download their street data (geojson) ... 
-        I grabbed data for Oregon & Washington (steps below) and loaded them into PostGIS...
-      - data for other states & countries (and in other formats) is available here, plus a bit of documentation (schema, etc...)
-      - run  this: ott/trafficdb/inrix/load_inrix_geojson.sh USA_*.geojson (and ignore any errors) to load INRIX streets / XD ids into PostGIS
-      - view this: using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data in PostGIS. see:
+    - map data from https://map-data-downloader.inrix.com:
+      - INRIX's map-data-downloader site allows one to manually download their street data (geojson)
+        (e.g., I grabbed data for Oregon & Washington, and loaded them into PostGIS... see steps below).
+      - the INRIX sales rep authorized my uname to access the above url (e.g., is email address -- thus a personal account)
+      - the map-data-downloader site contains data for other states & countries, in a variety of formats (.csv, .json, .shp, etc...)
+      - **run  this:** ott/trafficdb/inrix/load_inrix_geojson.sh USA_*.geojson (and ignore any errors) to load INRIX streets / XD ids into PostGIS
+      - **view this:** using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data in PostGIS. see:
         ott/trafficdb/inrix/test/postgis_traffic_inrix_segments.qgz for a QGIS project that will view the
         INRIX street segment geojson data, which was loaded into postgis via load_inrix_geojson.sh
       
