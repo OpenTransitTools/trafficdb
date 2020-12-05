@@ -21,7 +21,7 @@ overwrite="-overwrite"
 ##
 for f in $geojson_files
 do
-  cmd="ogr2ogr $db_opts $table_cmd $overwrite -explodecollections $f"
+  cmd="ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
   echo $cmd
   eval $cmd
   overwrite=""

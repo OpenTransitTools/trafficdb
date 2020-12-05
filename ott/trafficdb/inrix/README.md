@@ -12,7 +12,24 @@ INRIX data ingestion steps:
 
  - INRIX account access:
     - you will need 2 different authentication credentials
-    - first is t 
+    - map data:
+      - for things like the .geojson or .csv file of INRIX XD street segments
+      - https://map-data-downloader.inrix.com
+      - the INRIX sales authorized my uname (email address -- so this is a personal account)
+      - logging into the map-data-downloader site allows me to manually grab the street data (geojson) for Oregon & Washington
+      - data for other states & countries (and in other formats) is available here (as well as some documentation)
+      - run this: ott/trafficdb/inrix/load_inrix_geojson.sh USA_*.geojson (and ignore any errors)
+      - view this: using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data
+      - see: ott/trafficdb/inrix/test/postgis_traffic_inrix_segments.qgz for a QGIS project that will view the
+             INRIX street segment geojson data, which was loaded into postgis via load_inrix_geojson.sh
+      
+    - traffic api data:
+      - this requires both a vendorid and consumerid 
+      - one uses these two id's to then acquire an api token (which is valid for ~12 hours or so)
+      - via the api token, you'll be able to call this api: http://docs.inrix.com/traffic/speed/
+      - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken
+      - see: base.py / get_inrix_token(renew=False) function for more
+ 
  - INRIX data:
     - segment id data: 
       - there are per-state geojson (street geometry) files from INRIX, which map 
