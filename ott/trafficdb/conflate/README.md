@@ -1,7 +1,38 @@
-GTFS to OSM
+CONFLATE GTFS (Stop Segments) to LINE data (OSM, INRIX, etc...):
+================================================================
+
+12/04/2020:
 ===========
+ - conflation (better ... matching) via PostGIS in Python
+  - 1: broad query via st_ query(s):
+    - run st_intersects(st_buffer(a.geom, 1.0), b.geom) to find tons of candidate matches 
+    - maybe where clause this st_intersects data further (where highway, other st_ functions, etc...)
+  - 2: find roads that match in direction and points in python
+    - run https://postgis.net/docs/ST_LineInterpolatePoints.html and put this into 2 lists
+    - run thru these points, looking to match a handful to determine where things overlap
+
+  - questions
+    - is there a pure postgis / st_ routine to find overlaps?
+    - speed
+    - how to test, etc?
+
+
+12/03/2020:
+===========
+can QGIS do queries, then view results? 
+
+SELECT --count(*)
+a.id, st_astext(st_makeline(ST_Intersection(a.geom, b.geom)))
+FROM trimet.traffic_stop_segments a, trimet.traffic_inrix_segments b
+WHERE st_intersects(a.geom, b.geom)
+--and not ST_IsEmpty(ST_Buffer(ST_Intersection(a.geom, b.geom), 1.0));
+and (st_length(st_makeline(ST_Intersection(st_buffer(a.geom, 1.0), b.geom))) > 0.010 )
+group by a.id
+
+
 
 11/17/2020:
+===========
  - find nodes / ways along a trip / pattern / shape:
    - minimal is 2 stops (and not geom data)
    - maximal has shapes data + 2 stops ... that shape data should intersect closely with some OSM way(s)
