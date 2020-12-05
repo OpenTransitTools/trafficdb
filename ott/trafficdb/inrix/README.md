@@ -29,6 +29,9 @@ INRIX data ingestion steps:
       - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=__your_vid__&consumerid=__your_cid__
       - see function get_inrix_token(renew=False) in base.py, for code that programmatically acquires an INRIX api token
  
+ 
+### BONE PILE BELOW
+ 
  - INRIX data:
     - segment id data: 
       - there are per-state geojson (street geometry) files from INRIX, which map 
