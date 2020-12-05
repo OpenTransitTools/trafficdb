@@ -18,9 +18,9 @@ INRIX data ingestion steps:
       - the INRIX sales rep authorized my uname to access the above url (e.g., is email address -- thus a personal account)
       - the map-data-downloader site contains data for other states & countries, in a variety of formats (.csv, .json, .shp, etc...)
       - **run  this:** ott/trafficdb/inrix/load_inrix_geojson.sh USA_*.geojson (and ignore any errors) to load INRIX streets / XD ids into PostGIS
-      - **view this:** using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data in PostGIS. see:
-        ott/trafficdb/inrix/test/postgis_traffic_inrix_segments.qgz for a QGIS project that will view the
-        INRIX street segment geojson data, which was loaded into postgis via load_inrix_geojson.sh
+      - **view this:** using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data in PostGIS.
+        _ott/trafficdb/inrix/test/postgis_traffic_inrix_segments.qgz_ is a QGIS project file that should connect to your 
+        local PostGIS db, and show the INRIX street segment geojson data that was loaded into postgis via load_inrix_geojson.sh (above)
       
     - traffic api data:
       - this requires both an INRIX 'vendorid' and 'consumerid' 
