@@ -1,4 +1,4 @@
-INRIX data ingestion steps:
+INRIX data ingestion notes:
 ===========================
  - system requirements:
    - bash / postgres / postgis / ogr2ogr / python 3.x + zc.buildout
@@ -29,3 +29,12 @@ INRIX data ingestion steps:
       - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=__your_vid__&consumerid=__your_cid__
       - see function get_inrix_token(renew=False) in base.py, for code that programmatically acquires an INRIX api token
  
+ 
+ INRIX street segment ingestion steps:
+======================================
+  # install system reqs above ... start Postgres/PostGIS
+  # manually log-in and download the .geojson map data from https://map-data-downloader.inrix.com for whatever states
+    and countries you desire
+  # run 'ott/trafficdb/inrix/load_inrix_geojson.sh USA_*.geojson' 
+    note: there may be screen errors, but things should run to completion
+  # open PostGIS to check to see if db is working and populated for the states/regions you desire 
