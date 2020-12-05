@@ -25,11 +25,11 @@ INRIX data ingestion steps:
         INRIX street segment geojson data, which was loaded into postgis via load_inrix_geojson.sh
       
     - traffic api data:
-      - this requires both a vendorid and consumerid 
-      - one uses these two id's to then acquire an api token (which is valid for ~12 hours or so)
-      - via the api token, you'll be able to call this api: http://docs.inrix.com/traffic/speed/
-      - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken
-      - see: base.py / get_inrix_token(renew=False) function for more
+      - this requires both an INRIX 'vendorid' and 'consumerid' 
+      - these two id credentials are then used to acquire an api token (which is valid for ~12 hours or so)
+      - the api token will then allow calls to INRIX's traffic api: http://docs.inrix.com/traffic/speed/
+      - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=__your_vid__&consumerid=__your_cid__
+      - see function get_inrix_token(renew=False) in base.py, for code that programmatically acquires an INRIX api token
  
  - INRIX data:
     - segment id data: 
