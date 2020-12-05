@@ -21,7 +21,7 @@ INRIX data ingestion steps:
       - **view this:** using QGIS (http://download.qgis.org/), and you should be able to see the INRIX data in PostGIS.
         _ott/trafficdb/inrix/test/postgis_traffic_inrix_segments.qgz_ is a QGIS project file that should connect to your 
         local PostGIS db, and show the INRIX street segment geojson data that was loaded into postgis via load_inrix_geojson.sh (above)
-      
+
     - traffic api data:
       - this requires both an INRIX 'vendorid' and 'consumerid' 
       - these two id credentials are then used to acquire an api token (which is valid for ~12 hours or so)
@@ -29,24 +29,3 @@ INRIX data ingestion steps:
       - http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=__your_vid__&consumerid=__your_cid__
       - see function get_inrix_token(renew=False) in base.py, for code that programmatically acquires an INRIX api token
  
- 
-### BONE PILE BELOW
- 
- - INRIX data:
-    - segment id data: 
-      - there are per-state geojson (street geometry) files from INRIX, which map 
-        out the
-      - there is also a .csv file that maps INRIX Xd segment ids to OSM way ids
-        (to date, I haven't found a use for that data) 
-
-
-INRIX data:
-===========
-
-- The street geometry data for INRIX, has either INRIX id (xD id) to OSM way id (.csv file), or a street geometry file that has xD id data in the attribute / properties section.
-
-To load geoson into a db:
- ogr2ogr -f "PostgreSQL" PG:"dbname=ott user=ott active_schema=trimet" -nln traffic_inrix_segments -overwrite ./test/inrix_small.geojsonl.json
-   
-
-
