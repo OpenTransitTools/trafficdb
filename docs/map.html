@@ -47,6 +47,9 @@
     });
     map.addControl(new mapboxgl.NavigationControl());
 
+    var attrib = L.control.attribution().addTo(map);
+    attrib.addAttribution('© <a href="https://tiles.trimet.org">TriMet</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>');
+
     map.on('load', function () {
       var iconMarkerEl = document.createElement("div");
       iconMarkerEl.innerHTML = "<div class='marker-arrow'></div>" + "<div class='marker-pulse'></div>";
