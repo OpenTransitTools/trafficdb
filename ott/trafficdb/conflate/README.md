@@ -16,6 +16,28 @@ CONFLATE GTFS (Stop Segments) to LINE data (OSM, INRIX, etc...):
     - speed
     - how to test, etc?
 
+  - queries
+    - https://gis.stackexchange.com/questions/132259/postgis-conflation-of-two-vector-layers-into-a-single-layer
+    - https://postgis.net/docs/ST_LineInterpolatePoints.html
+
+SELECT --count(*)
+a.id, b.xdsegid
+--, st_length(ST_Intersection(ST_Buffer(a.geom, 1.005), b.geom)) as len
+--, st_frechetdistance(a.geom, b.geom) as dist
+--, st_hausdorffdistance(a.geom, b.geom) as dist
+--, st_astext(ST_relate(a.geom, b.geom))
+, ST_GeometryType(ST_Intersection(a.geom, b.geom))
+, st_astext(ST_Intersection(a.geom, b.geom)) 
+--, st_astext(ST_Intersection(st_buffer(a.geom, 0.5), b.geom)) 
+--, st_astext(ST_SharedPaths(a.geom, b.geom))
+---, st_length(st_makeline(ST_Intersection(a.geom, b.geom))), st_astext(st_makeline(ST_Intersection(a.geom, b.geom)))
+FROM trimet.traffic_stop_segments a, trimet.traffic_inrix_segments b 
+WHERE st_intersects(a.geom, b.geom) 
+AND   st_contains(ST_Buffer(a.geom, 0.00001), b.geom)
+--and not ST_IsEmpty(ST_Buffer(ST_Intersection(a.geom, b.geom), 1.0))
+--and (st_length(ST_Intersection(st_buffer(a.geom, 1.0), b.geom)) > 0.010 )
+limit 200
+
 
 12/03/2020:
 ===========

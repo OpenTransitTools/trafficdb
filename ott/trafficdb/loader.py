@@ -70,8 +70,9 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
     file_utils.cat(dir, file, geojson)
 
     # step 5: start simple server & open the browser to the map
-    print("run simple python server and open map")
-    exe_utils.run_cmd("scripts/start_static.sh", shell_script=True)
+    if args.file not in "skipp":
+        print("run simple python server and open map")
+        exe_utils.run_cmd("scripts/start_static.sh", shell_script=True)
 
 
 def segments_to_geojson():
