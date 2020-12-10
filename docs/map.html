@@ -43,27 +43,54 @@
     var map = new mapboxgl.Map({
       container: 'map',
       style: 'https://tiles.trimet.org/styles/trimet/style.json',
-      hash: true
+      hash: true,
+      attributionControl: false
     });
-    map.addControl(new mapboxgl.NavigationControl());
 
-    var attrib = L.control.attribution().addTo(map);
-    attrib.addAttribution('© <a href="https://tiles.trimet.org">TriMet</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>');
+    var scale = new mapboxgl.ScaleControl({
+      maxWidth: 80,
+      unit: 'imperial'
+    });
+
+    var attrib = new mapboxgl.AttributionControl({
+      compact: true,
+      customAttribution: '© <a target="_" href="https://tiles.trimet.org">TriMet</a> '
+    });
+
+    var full = new mapboxgl.FullscreenControl();
+
+    var nav = new mapboxgl.NavigationControl({
+      visualizePitch: true
+    });
+
+    var geo = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true
+    });
+
+    var iconMarkerEl = document.createElement("div");
+    iconMarkerEl.innerHTML = "<div class='marker-arrow'></div>" + "<div class='marker-pulse'></div>";
+    var pelias = new PeliasGeocoder({
+      url: 'https://ws.trimet.org/peliaswrap/v1',
+      flyTo: 'hybrid',
+      useFocusPoint: true,
+      marker: {
+        icon: iconMarkerEl,
+        multiple: false
+      },
+      customAttribution: 'Powered bi Frank OpenTransitTools'
+    });
+
+    map.addControl(nav);
+    map.addControl(scale);
+    map.addControl(pelias);
+    map.addControl(attrib);
+    map.addControl(full, 'bottom-right');
+    map.addControl(geo,  'bottom-right');
 
     map.on('load', function () {
-      var iconMarkerEl = document.createElement("div");
-      iconMarkerEl.innerHTML = "<div class='marker-arrow'></div>" + "<div class='marker-pulse'></div>";
-
-      map.addControl(new PeliasGeocoder({
-        url: 'https://ws.trimet.org/peliaswrap/v1',
-        flyTo: 'hybrid',
-        useFocusPoint: true,
-        marker: {
-          icon: iconMarkerEl,
-          multiple: false
-        },
-        customAttribution: 'Powered bi Frank OpenTransitTools'
-      }));
 
       map.addSource('segments', {
         type: 'geojson',

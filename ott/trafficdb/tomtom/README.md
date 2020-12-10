@@ -1,10 +1,18 @@
 TOMTOM Traffic
 ===============
 
-Don't know much about their data (Dec 2020), but...
+Don't know too mmuch about their data (Dec 2020), but worth checking out in the future.
+They do offer a 'free' tier to access their data (e.g. free allows 2500 transactions per-day).
+https://developer.tomtom.com/store/maps-api
+
+##TRAFFIC SPEEDS
+
+https://developer.tomtom.com/traffic-api/traffic-api-documentation-traffic-flow/flow-segment-data#response-data
 
 
 ##TRAFFIC DENSITY
+
+https://developer.tomtom.com/content/traffic-api-explorer
 
 ##### DESCRIPTION:
 

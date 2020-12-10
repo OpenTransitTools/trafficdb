@@ -11,16 +11,28 @@ log = logging.getLogger(__file__)
 
 class Database(object):
     """
+    NOTE: Dec 2020 I was getting errors loading gtfsdb (stops in the stop_times often), so found these changes to create_engine
+          https://stackoverflow.com/questions/55457069/how-to-fix-operationalerror-psycopg2-operationalerror-server-closed-the-conn
+
     TODO: maybe inherit from GTFSDB's Database object?  Do we need two?
     TODO: Also have to init GTFSDB, so maybe inherit is better
           @see: loader.py  import gtfsdb
            gtfsdb.Database.prep_gtfsdb_model_classes(schema, args.is_geospatial)
+
     """
     db_singleton = None
 
     def __init__(self, url, schema=None, is_geospatial=False, pool_size=20, session_extenstion=None):
         self.url = url
-        self.engine = create_engine(url, poolclass=QueuePool, pool_size=pool_size)
+        self.engine = create_engine(
+            url,
+            poolclass=QueuePool,
+            pool_size=pool_size,
+            max_overflow = 2,
+            pool_recycle = 300,
+            pool_pre_ping = True,
+            pool_use_lifo = True
+        )
         event.listen(self.engine, 'connect', Database.connection)
 
         # note ... set these after creating self.engine
