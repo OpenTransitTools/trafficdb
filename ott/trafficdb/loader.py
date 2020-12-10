@@ -65,7 +65,7 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
 
     # step 4: output geojson for map
     geojson = StopSegment.to_geojson(session)
-    dir = "ott/trafficdb/examples"
+    dir = "docs"
     file = "segments.geojson"
     file_utils.cat(dir, file, geojson)
 

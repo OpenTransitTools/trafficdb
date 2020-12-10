@@ -8,6 +8,7 @@ from gtfsdb import Stop
 from gtfsdb import PatternBase
 
 from ott.trafficdb.gtfs.base import Base
+from ott.utils import geo_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -34,6 +35,8 @@ class StopSegment(Base, PatternBase):
     distance = Column(Numeric(20, 10), nullable=False)
     bearing = Column(Numeric(20, 10))
     direction = Column(String(2))
+    bearing2 = Column(Numeric(20, 10))
+    direction2 = Column(String(2))
     shape_id = Column(String(255)) # note: the actual geom is only a partial shape .. line between the two stops
     begin_distance = Column(Numeric(20, 10), nullable=False)
     end_distance = Column(Numeric(20, 10), nullable=False)
@@ -75,20 +78,24 @@ class StopSegment(Base, PatternBase):
         self.begin_distance = begin_stop.shape_dist_traveled
         self.end_distance = end_stop.shape_dist_traveled
 
+        b = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
+        d = geo_utils.compass(b)
+        self.bearing = b
+        self.direction = d
+
         b = session.query(func.degrees(func.ST_Azimuth(begin_stop.stop.geom, end_stop.stop.geom))).one()
         #import pdb; pdb.set_trace()
-        if b and b[0]:
+        if b and b[0] >= 0.0:
             b = b[0]
-            self.bearing = b
-            if b >= 337.5 or b <= 22.5: self.direction = 'N'
-            elif b <= 067.5: self.direction = 'NE'
-            elif b <= 112.5: self.direction = 'E'
-            elif b <= 157.5: self.direction = 'SE'
-            elif b <= 202.5: self.direction = 'S'
-            elif b <= 247.5: self.direction = 'SW'
-            elif b <= 292.5: self.direction = 'W'
-            else: self.direction = 'NW'
-
+            self.bearing2 = b
+            if b >= 337.5 or b <= 22.5: self.direction2 = 'N'
+            elif b <= 067.5: self.direction2 = 'NE'
+            elif b <= 112.5: self.direction2 = 'E'
+            elif b <= 157.5: self.direction2 = 'SE'
+            elif b <= 202.5: self.direction2 = 'S'
+            elif b <= 247.5: self.direction2 = 'SW'
+            elif b <= 292.5: self.direction2 = 'W'
+            else: self.direction2 = 'NW'
 
         if hasattr(self, 'geom'):
             q = self._make_shapes(session, begin_stop, end_stop, trip)
@@ -148,7 +155,7 @@ class StopSegment(Base, PatternBase):
             # step 1: query gtfsdb and build a cache of stop-stop segments
             trips = session.query(Trip)
             #trips = session.query(Trip).filter(Trip.route_id == '57')
-            #trips = session.query(Trip).filter(Trip.route_id == '70')
+            trips = session.query(Trip).filter(Trip.route_id == '70')
             for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
@@ -207,17 +214,17 @@ class StopSegment(Base, PatternBase):
             stop_cache[s[0]] = s[1]
 
         #import pdb; pdb.set_trace()
-        features = session.query(StopSegment.id, StopSegment.geom.ST_AsGeoJSON(),
+        features = session.query(StopSegment.id, StopSegment.direction, StopSegment.geom.ST_AsGeoJSON(),
                                  StopSegment.begin_stop_id, StopSegment.end_stop_id).all()
         ln = len(features) - 1
         featgeo = ""
         last_stop = "xxx"
         for i, f in enumerate(features):
             comma = ",\n" if i < ln else "\n"
-            id = f[0]; geom = f[1]; begin_stop_id = f[2]; end_stop_id = f[3];
+            id = f[0]; dir = f[1]; geom = f[2]; begin_stop_id = f[3]; end_stop_id = f[4];
             if last_stop != begin_stop_id:
                 featgeo += feature_tmpl.format(begin_stop_id, stop_cache[begin_stop_id], ",\n")
-            featgeo += feature_tmpl.format(id, geom, ",\n")
+            featgeo += feature_tmpl.format(id + " - " + dir, geom, ",\n")
             featgeo += feature_tmpl.format(end_stop_id, stop_cache[end_stop_id], comma)
             last_stop = end_stop_id
 
