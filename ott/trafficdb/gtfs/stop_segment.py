@@ -35,8 +35,6 @@ class StopSegment(Base, PatternBase):
     distance = Column(Numeric(20, 10), nullable=False)
     bearing = Column(Numeric(20, 10))
     direction = Column(String(2))
-    bearing2 = Column(Numeric(20, 10))
-    direction2 = Column(String(2))
     shape_id = Column(String(255)) # note: the actual geom is only a partial shape .. line between the two stops
     begin_distance = Column(Numeric(20, 10), nullable=False)
     end_distance = Column(Numeric(20, 10), nullable=False)
@@ -78,24 +76,8 @@ class StopSegment(Base, PatternBase):
         self.begin_distance = begin_stop.shape_dist_traveled
         self.end_distance = end_stop.shape_dist_traveled
 
-        b = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
-        d = geo_utils.compass(b)
-        self.bearing = b
-        self.direction = d
-
-        b = session.query(func.degrees(func.ST_Azimuth(begin_stop.stop.geom, end_stop.stop.geom))).one()
-        #import pdb; pdb.set_trace()
-        if b and b[0] >= 0.0:
-            b = b[0]
-            self.bearing2 = b
-            if b >= 337.5 or b <= 22.5: self.direction2 = 'N'
-            elif b <= 067.5: self.direction2 = 'NE'
-            elif b <= 112.5: self.direction2 = 'E'
-            elif b <= 157.5: self.direction2 = 'SE'
-            elif b <= 202.5: self.direction2 = 'S'
-            elif b <= 247.5: self.direction2 = 'SW'
-            elif b <= 292.5: self.direction2 = 'W'
-            else: self.direction2 = 'NW'
+        self.bearing = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
+        self.direction = geo_utils.compass(self.bearing)
 
         if hasattr(self, 'geom'):
             q = self._make_shapes(session, begin_stop, end_stop, trip)
@@ -155,7 +137,7 @@ class StopSegment(Base, PatternBase):
             # step 1: query gtfsdb and build a cache of stop-stop segments
             trips = session.query(Trip)
             #trips = session.query(Trip).filter(Trip.route_id == '57')
-            trips = session.query(Trip).filter(Trip.route_id == '70')
+            #trips = session.query(Trip).filter(Trip.route_id == '70')
             for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
