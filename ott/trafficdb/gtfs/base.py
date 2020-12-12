@@ -10,11 +10,6 @@ log = logging.getLogger(__file__)
 class _Base(object):
 
     id = Column(String(255), primary_key=True, index=True)
-    created = Column(DateTime, default=datetime.datetime.now())
-    updated = Column(DateTime, default=datetime.datetime.now())
-
-    def __init__(self):
-        self.updated = datetime.datetime.now()
 
     @abc.abstractmethod
     def parse_record(cls, session, record, timestamp):
@@ -42,6 +37,26 @@ class _Base(object):
         ret_val = def_val
         if hasattr(cls, '__table__'):
             ret_val = cls.__table__.schema
+        return ret_val
+
+    @classmethod
+    def get_full_table_name(cls, table_name=None):
+        if table_name:
+            # we were provided a table name, so append any schema name if table name provided
+            schema = None if not hasattr(cls, '__table__') else cls.__table__.schema
+            if schema:
+                ret_val = "{}.{}".format(schema, table_name)
+            else:
+                ret_val = table_name
+        else:
+            # get best table name for this object
+            if hasattr(cls, '__table__'):
+                ret_val = cls.__table__
+            elif hasattr(cls, '__tablename__'):
+                ret_val = cls.__tablename__
+            else:
+                ret_val = cls.__name__
+
         return ret_val
 
     @classmethod

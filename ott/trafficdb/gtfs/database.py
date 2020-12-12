@@ -88,6 +88,7 @@ class Database(object):
         # note: include all ORM objects here, so the db finds them
         from .stop_segment import StopSegment
         from .stop_segment_trip import StopSegmentTrip
+        from ..inrix.inrix_segment import InrixSegment
 
         if cls.db_singleton is None:
             cls.db_singleton = Database(url, schema, is_geospatial)

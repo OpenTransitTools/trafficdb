@@ -8,6 +8,7 @@ name=${DB_NAME:=ott}
 user=${DB_USER:=ott}
 schema=${DB_SCHEMA:=trimet}
 table_name=${TABLE_NAME:=traffic_inrix_segments}
+rename_columns=${COL_RENAME:="xdsegid AS id, bearing AS direction"}
 geojson_files=${*:-"$DIR/test/inrix.geojson"}
 
 db_opts="-f 'PostgreSQL' PG:'dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
@@ -21,7 +22,11 @@ overwrite="-overwrite"
 ##
 for f in $geojson_files
 do
-  cmd="ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
+  sql=""
+  if [[ ! -z "$rename_columns" ]]; then
+    sql="-sql 'SELECT $rename_columns FROM $(basename "${f%.*}")'"
+  fi
+  cmd="ogr2ogr $db_opts $table_cmd $overwrite $sql -skipfailures -explodecollections $f"
   echo $cmd
   eval $cmd
   overwrite=""
