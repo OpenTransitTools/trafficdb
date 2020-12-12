@@ -1,4 +1,5 @@
-from sqlalchemy import select, MetaData, Table, inspect
+from sqlalchemy import select, MetaData, Table
+from geoalchemy2 import func
 
 from ott.utils import string_utils
 
@@ -15,9 +16,16 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
     """
     # import pdb; pdb.set_trace()
     try:
-        segments = session.query(traffic_segments_cls).limit(5)
+        t1 = StopSegment
+        t2 = traffic_segments_cls
+        segments = session.query(
+            t1, t2
+
+        ).filter(
+            func.ST_Intersects(t1.geom, t2.geom)
+        ).limit(5)
         for s in segments.all():
-            print(s.__dict__)
+            print(s)
     except Exception as e:
         print(e)
 

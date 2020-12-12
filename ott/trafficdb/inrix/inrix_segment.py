@@ -1,4 +1,8 @@
-from sqlalchemy import Column, String, Numeric
+from sqlalchemy import Column
+from geoalchemy2 import Geometry
+from sqlalchemy.orm import deferred
+
+
 from ott.trafficdb.gtfs.base import Base
 
 import logging
@@ -14,3 +18,8 @@ class InrixSegment(Base):
 
     def __init__(self, session, segment, trip):
         super(InrixSegment, self).__init__()
+
+    @classmethod
+    def add_geometry_column(cls):
+        if not hasattr(cls, 'geom'):
+            cls.geom = deferred(Column(Geometry(geometry_type='LINESTRING', srid=4326)))
