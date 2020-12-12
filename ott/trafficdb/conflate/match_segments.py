@@ -1,4 +1,4 @@
-from sqlalchemy import select, MetaData, Table
+from sqlalchemy import and_, or_
 from geoalchemy2 import func
 
 from ott.utils import string_utils
@@ -14,36 +14,31 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
     """
     will find all traffic segments in the database that align up with
     """
-    # import pdb; pdb.set_trace()
     try:
-        t1 = StopSegment
-        t2 = traffic_segments_cls
+        # step 1: find intersections and some buffer of the two geoms
+        # import pdb; pdb.set_trace()
+        a = StopSegment
+        b = traffic_segments_cls
         segments = session.query(
-            t1, t2
-
+            a, b
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
         ).filter(
-            func.ST_Intersects(t1.geom, t2.geom)
-        ).limit(5)
+            and_(
+            func.ST_Intersects(a.geom, b.geom)
+            , or_(a.id.like('%844'), a.id.like('843%')))
+        ).limit(20)
+
+        # step b: loop thru and find matches based on a set of rules that follow, et...
         for s in segments.all():
-            print(s)
+            print(s[0].id, s[1].id, s[2:])
     except Exception as e:
-        print(e)
-
-
-def jnk(session):
-    metadata = MetaData(bind=None)
-    tname = 'traffic_inrix_segments'
-    traffic_table_name = StopSegment.get_full_table_name(tname)
-    traffic_table = Table(tname, metadata, autoload=True, autoload_with=engine)
-    # traffic_table = Table(traffic_table_name, metadata, autoload=True, autoload_with=engine)
-    traffic_table = Table(tname, metadata, autoload=True, autoload_with=engine)
-    s = select([traffic_table])
-    print(s)
-    #results = session.execute(s).fetchall()
-    #matches = traffic_segments_to_stop_segments(session, '')
+        log.warning(e)
 
 
 def main(cmd_name="bin/match-segments"):
+    """ simple demo """
     from ..loader import make_args_config, make_db_url_schema
 
     config, args = make_args_config(cmd_name)
