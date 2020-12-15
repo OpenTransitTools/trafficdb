@@ -1,4 +1,4 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from geoalchemy2 import Geometry
 from sqlalchemy.orm import deferred
 
@@ -12,9 +12,9 @@ log = logging.getLogger(__file__)
 class InrixSegment(Base):
     __tablename__ = 'traffic_inrix_segments'
 
-    direction = Column()
-    distance = Column()
-    lanes = Column()
+    direction = Column(String)
+    distance = Column(String)
+    lanes = Column(String)
 
     def __init__(self, session, segment, trip):
         super(InrixSegment, self).__init__()
