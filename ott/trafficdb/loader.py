@@ -8,7 +8,6 @@ from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.gtfs.stop_segment import StopSegment
 
 import logging
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__file__)
 
 

@@ -1,3 +1,4 @@
+import enum
 import abc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String
@@ -6,8 +7,13 @@ import logging
 log = logging.getLogger(__file__)
 
 
-class _Base(object):
+class Vendor(enum.Enum):
+    inrix = 1
+    mapbox = 2
+    tomtom = 3
 
+
+class _Base(object):
     id = Column(String(255), primary_key=True, index=True)
 
     @abc.abstractmethod

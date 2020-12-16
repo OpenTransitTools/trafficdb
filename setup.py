@@ -59,6 +59,6 @@ setup(
         load-speed-data = ott.trafficdb.loader:load_speed_data
         load-gtfs-and-speed-data = ott.trafficdb.loader:load_gtfs_and_speed_data
         geojson-segments = ott.trafficdb.loader:segments_to_geojson
-        match-segments = ott.trafficdb.conflate.match_segments:main
+        match-segments = ott.trafficdb.model.conflate.match_segments:main
     """,
 )
