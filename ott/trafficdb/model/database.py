@@ -3,7 +3,7 @@ from sqlalchemy.pool import QueuePool
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 from ott.utils import db_utils
-from ott.trafficdb.gtfs.base import Base
+from ott.trafficdb.model.base import Base
 
 import logging
 log = logging.getLogger(__file__)
@@ -86,11 +86,11 @@ class Database(object):
     @classmethod
     def make_session(cls, url, schema, is_geospatial=False, create_db=False, prep_gtfsdb=True):
         # note: include all ORM objects here, so the db finds them
-        from .stop_segment import StopSegment
-        from .stop_segment_trip import StopSegmentTrip
-        from ..inrix.inrix_segment import InrixSegment
-        from ..conflate.traffic_segment import TrafficSegment
-        from ..conflate.segment_speed import TrafficSegmentSpeed
+        from .gtfs.stop_segment import StopSegment
+        from .gtfs.stop_segment_trip import StopSegmentTrip
+        from .inrix.inrix_segment import InrixSegment
+        from .conflate.traffic_segment import TrafficSegment
+        from .conflate.segment_speed import TrafficSegmentSpeed
 
         if cls.db_singleton is None:
             cls.db_singleton = Database(url, schema, is_geospatial)

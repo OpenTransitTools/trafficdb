@@ -3,8 +3,8 @@ from geoalchemy2 import func
 
 from ott.utils import string_utils
 
-from ott.trafficdb.gtfs.database import Database
-from ott.trafficdb.gtfs.stop_segment import StopSegment
+from ott.trafficdb.model.database import Database
+from ott.trafficdb.model.gtfs.stop_segment import StopSegment
 
 import logging
 log = logging.getLogger(__file__)

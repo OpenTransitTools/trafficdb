@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
-from ott.trafficdb.gtfs.base import Base
+from ott.trafficdb.model.base import Base
 
 import logging
 log = logging.getLogger(__file__)
