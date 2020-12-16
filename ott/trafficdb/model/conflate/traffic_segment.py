@@ -30,7 +30,6 @@ class TrafficSegment(Base):
     stop_segment_id = Column(String(255), index=True, nullable=False)
     traffic_segment_id = Column(String(255), index=True, nullable=False)
     vendor_id = Column(Enum(Vendor), nullable=False, default=Vendor.inrix)
-    vendor_table_id = Column(String(255), nullable=False)
 
     lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
     distance = Column(Numeric(20, 10), nullable=False, default=0.0)
@@ -49,7 +48,6 @@ class TrafficSegment(Base):
         super(TrafficSegment, self).__init__()
         self.stop_segment_id = stop_segment.id
         self.traffic_segment_id = traffic_segment.id
-        self.vendor_table_id = traffic_segment.id
         self.vendor_id = traffic_segment.vendor_id
         self.geom = traffic_segment.geom
 
