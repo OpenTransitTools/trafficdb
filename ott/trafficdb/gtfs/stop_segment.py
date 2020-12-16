@@ -137,7 +137,7 @@ class StopSegment(Base, PatternBase):
             # step 1: query gtfsdb and build a cache of stop-stop segments
             trips = session.query(Trip)
             #trips = session.query(Trip).filter(Trip.route_id == '57')
-            #trips = session.query(Trip).filter(Trip.route_id == '70')
+            trips = session.query(Trip).filter(Trip.route_id == '70')
             for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)

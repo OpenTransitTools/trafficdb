@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, String, Enum
+from sqlalchemy import Column, String, Numeric, Enum
 from sqlalchemy.orm import deferred, relationship
 from geoalchemy2 import Geometry
 
@@ -16,14 +16,32 @@ class TrafficVendor(enum.Enum):
     tomtom = 3
 
 
+class StreetType(enum.Enum):
+    highway = 1
+    major_arterial = 2
+    arterial = 3
+    neighborhood = 4
+
+
 class TrafficSegment(Base):
     __tablename__ = 'traffic_segment'
 
     stop_segment_id = Column(String(255), index=True, nullable=False)
     traffic_segment_id = Column(String(255), index=True, nullable=False)
-
     vendor_id = Column(Enum(TrafficVendor), nullable=False, default=TrafficVendor.inrix)
     vendor_segment_table_id = Column(String(255), nullable=False)
+
+    lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
+    distance = Column(Numeric(20, 10), nullable=False, default=0.0)
+    speed_limit = Column(Numeric(20, 10), nullable=False, default=0.0)
+    street_type = Column(Enum(StreetType), nullable=False, default=StreetType.arterial)
+
+    speeds = relationship(
+        'TrafficSegmentSpeed',
+        primaryjoin='TrafficSegment.id==TrafficSegmentSpeed.segment_id',
+        foreign_keys='(TrafficSegment.id)',
+        #order_by='StopTime.stop_sequence',
+        uselist=True, viewonly=True)
 
     def __init__(self):
         super(TrafficSegment, self).__init__()

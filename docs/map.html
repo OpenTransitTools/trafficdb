@@ -43,6 +43,8 @@
     var map = new mapboxgl.Map({
       container: 'map',
       style: 'https://tiles.trimet.org/styles/trimet/style.json',
+      pitch: 90,
+      antialias: true,
       hash: true,
       attributionControl: false
     });

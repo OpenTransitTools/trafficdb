@@ -54,7 +54,7 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
         pass
 
     # step 2: load stop segments
-    if args.file not in "skip":
+    if args.file not in "skipp":
         session = Database.make_session(args.database_url, args.schema, args.is_geospatial, create_db=True)
         StopSegment.load(session)
         session.commit()
@@ -72,7 +72,7 @@ def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
     file_utils.cat(dir, file, geojson)
 
     # step 5: start simple server & open the browser to the map
-    if args.file not in "skipp":
+    if args.file not in "skip":
         print("run simple python server and open map")
         exe_utils.run_cmd("scripts/start_static.sh", shell_script=True)
 
