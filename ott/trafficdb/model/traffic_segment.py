@@ -22,6 +22,7 @@ class StreetType(enum.Enum):
         val = num_utils.to_int_range(val, 1, 4, 4)
         return StreetType(val).name
 
+
 class TrafficSegment(Base):
     __tablename__ = 'traffic_segment'
 

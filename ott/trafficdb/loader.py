@@ -5,7 +5,7 @@ from ott.utils import file_utils
 from ott.utils import exe_utils
 
 from ott.trafficdb.model.database import Database
-from ott.trafficdb.model.gtfs.stop_segment import StopSegment
+from ott.trafficdb.model.stop_segment import StopSegment
 
 import logging
 log = logging.getLogger(__file__)

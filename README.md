@@ -10,12 +10,21 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
  - git clone https://github.com/OpenTransitTools/trafficdb.git
  - cd trafficdb
  - buildout
- - psql -c "CREATE USER ott;";  psql -c "CREATE DATABASE ott;"  
- - bin/load-gtfs-and-speed-data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
+ - psql -c "CREATE USER ott;";  psql -c "CREATE DATABASE ott;"
+ - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 
+   - bin/load-gtfs-and-speed-data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
+ - step 2: load traffic vendor street / segment data (INRIX in this case)
+   - ott/trafficdb/model/inrix/load_inrix_geojson.sh INRIX/USA_*.geojson
+ - step 3: match/conflate stop-segments with traffic segment data
+   - bin/match-segments
+ - step 4: load speed data from INRIX into db (on-going ... run every 5 mintutes?)
+   - bin/load-speed-data 
+ - step 5: plot lastest segment / speed data on the example map
+   - bin/generate-speed-geojson --show-map
 
-######  note:  the load will take upwards of 1 hour (or more) ... but once done, you'll have a complete database with speed data
+######  note:  the load will take upwards of 1 hour (or more) ... but once done, you'll have a complete database with transit and speed data
  
 ## todo:
  - speed and osm data (example datasets) needed to complete things
  - create a docker container for the steps above!
- - create a second (first) example around MapBox data 
+ - create a second & third example around MapBox and/or TomTom data 

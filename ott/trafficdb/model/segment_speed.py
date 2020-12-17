@@ -1,8 +1,5 @@
 import enum
-
 from sqlalchemy import Column, String, Integer, Numeric, Enum
-from sqlalchemy.orm import deferred, relationship
-
 from ott.trafficdb.model.base import Base
 
 import logging

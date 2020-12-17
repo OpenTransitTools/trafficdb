@@ -4,8 +4,8 @@ from geoalchemy2 import func
 from ott.utils import string_utils
 
 from ott.trafficdb.model.database import Database
-from ott.trafficdb.model.gtfs.stop_segment import StopSegment
-from .traffic_segment import TrafficSegment
+from ott.trafficdb.model.stop_segment import StopSegment
+from ott.trafficdb.model.traffic_segment import TrafficSegment
 
 import logging
 log = logging.getLogger(__file__)
@@ -84,7 +84,7 @@ def main(cmd_name="bin/match-segments"):
     is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
     session = Database.make_session(url, schema, is_geospatial)
 
-    from ..inrix.inrix_segment import InrixSegment
+    from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
     segments = match_traffic_to_stop_segments(session, InrixSegment)
 
     if segments:

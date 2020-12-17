@@ -1,11 +1,5 @@
-from sqlalchemy import Column, String, Numeric, ForeignKey
-from sqlalchemy.orm import relationship
-from geoalchemy2 import func
-
-from gtfsdb import Trip
-from gtfsdb import Shape
-from gtfsdb import Stop
-from gtfsdb import PatternBase
+from sqlalchemy import Column, String, Numeric
+from gtfsdb import Stop, Trip, Shape, PatternBase
 
 from ott.trafficdb.model.base import Base
 from ott.utils import geo_utils
