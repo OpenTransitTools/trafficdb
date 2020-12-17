@@ -1,6 +1,8 @@
 import enum
-from sqlalchemy import Column, String, Integer, Numeric, Enum
+import datetime
+from sqlalchemy import Column, String, Integer, DateTime, Numeric, Enum
 from ott.trafficdb.model.base import Base
+from ott.utils import num_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -15,6 +17,11 @@ class CongestionLevel(enum.Enum):
     standstill = 5  # 21% 35%
     no_flow = 6     # 0% 20%
 
+    @classmethod
+    def get_name(cls, val):
+        val = num_utils.to_int_range(val, 0, 6, 0)
+        return CongestionLevel(val).name
+
 
 class TrafficSegmentSpeed(Base):
     __tablename__ = 'traffic_segment_speed'
@@ -25,6 +32,7 @@ class TrafficSegmentSpeed(Base):
     current_speed = Column(Numeric(20, 10), nullable=False, default=0.0)
     travel_time = Column(Numeric(20, 10), nullable=False, default=0.0)
     congestion_level = Column(Enum(CongestionLevel), nullable=False, default=CongestionLevel.unknown)
+    capture_time = Column(DateTime, default=datetime.datetime.now())
 
     def __init__(self):
         super(TrafficSegmentSpeed, self).__init__()

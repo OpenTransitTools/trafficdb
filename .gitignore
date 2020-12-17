@@ -1,6 +1,7 @@
 # junk & crap
 vendor*
 .eggs
+.token
 [a-z].py
 [a-z].*json
 segments.geojson

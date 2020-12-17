@@ -1,4 +1,3 @@
-import requests
 from ott.utils.config_util import ConfigUtil
 
 
@@ -8,23 +7,29 @@ def ini(section='inrix'):
     return ini._INI_
 
 
-def get_inrix_token(renew=False):
+def make_inrix_url(service, token=None, force=False, format="json"):
+    if token is None or force:
+        from .get_token import get_inrix_token
+        token = get_inrix_token(renew=force)
+
+    url = "{}?action={}&format={}&token={}".format(ini().get('traffic_url'), service, format, token)
+    return url
+
+
+def speeds_url_state(geo_id="243"):
     """
-    http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=<your vid>&consumerid=<your cid>
-    will return json, ala { result: { token: < me> }, ... }
+    Oregon is geoID=243
+    http://api.inrix.com/Traffic/Inrix.ashx?action=GetSegmentSpeedInGeography&geoID=243&token=
+    :see: http://docs.inrix.com/traffic/speed/
     """
-    #import pdb; pdb.set_trace()
-    if not hasattr(get_inrix_token, '_TOKEN_') or renew:
-        url = ini().get('traffic_url')
-        vendorid = ini().get('vendorid')
-        consumerid = ini().get('consumerid')
-        token_url = "{}?action=getsecuritytoken&format=json&vendorid={}&consumerid={}".format(url, vendorid, consumerid)
-        #print(token_url)
-        resp = requests.get(token_url)
-        get_inrix_token._TOKEN_ = resp.json()['result']['token']
-    return get_inrix_token._TOKEN_
+    url = "{}&geoID={}".format(make_inrix_url("GetSegmentSpeedInGeography"), geo_id)
+    return url
 
 
-def main(argv=None):
-    print(get_inrix_token())
-
+def speeds_url_bbox(bbox=None):
+    """
+    ?Action=GetSegmentSpeedinBox
+    :see: http://docs.inrix.com/traffic/speed/
+    """
+    url = "{}&bbox={}".format(make_inrix_url("GetSegmentSpeedinBox"), bbox)
+    return url

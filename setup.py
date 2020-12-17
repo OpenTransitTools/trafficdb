@@ -54,7 +54,8 @@ setup(
         main = ott.trafficdb.pyramid.app:main
 
         [console_scripts]
-        get_inrix_token = ott.trafficdb.inrix.base:main
+        inrix_auth_token = ott.trafficdb.control.inrix.get_token:main
+        inrix_speed_data = ott.trafficdb.control.inrix.speed_data:main
 
         load-speed-data = ott.trafficdb.loader:load_speed_data
         load-gtfs-and-speed-data = ott.trafficdb.loader:load_gtfs_and_speed_data
