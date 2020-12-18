@@ -1,6 +1,6 @@
 import requests
 from ott.utils import token_utils
-from .base import ini, speeds_url_state
+from .base import ini
 
 
 def get_inrix_token(renew=False):
@@ -41,6 +41,7 @@ def get_inrix_token(renew=False):
 
 def main(argv=None):
     try:
-        print(speeds_url_state())
+        token = get_inrix_token()
+        print(token)
     except:
         print("error: does ./config/base.ini have an 'inrix' section, with valid vendorid and consumerid values?")
