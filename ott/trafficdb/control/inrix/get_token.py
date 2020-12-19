@@ -5,7 +5,7 @@ from .base import ini
 
 def get_inrix_token(renew=False):
     """
-    http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=<your vid>&consumerid=<your cid>
+    http://api.inrix.com/traffic/inrix.ashx?action=getsecuritytoken&vendorid=<your vid>&consumerid=<your cid>
     will return json, ala { result: { token: < me> }, ... }
 
     FYI: git update-index --assume-unchanged config/base.ini

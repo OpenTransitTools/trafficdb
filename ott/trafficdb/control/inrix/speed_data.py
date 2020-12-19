@@ -1,6 +1,7 @@
+import sys
 import time
 import requests
-from .urls import speeds_url_segments
+from  . import urls
 
 import logging
 log = logging.getLogger(__file__)
@@ -42,7 +43,41 @@ def download_speed_data(func=speeds_url_segments, first_param=None, count=0, num
     return ret_val
 
 
-def main(argv=None):
-    #ret_val = download_speed_data(first_param="448833198")
-    ret_val = download_speed_data(first_param="1237061475")
-    print(ret_val)
+
+def smart_divide(func):
+    def inner(a, b):
+        print("I am going to divide", a, "and", b)
+        if b == 0:
+            print("Whoops! cannot divide")
+            return
+
+        print(func)
+        return func(a, b)
+    return inner
+
+
+@smart_divide
+def xdivide(a, b):
+    print(a * b)
+
+
+def x(segment_ids=None):
+    url = urls.speeds_url_segments(segment_ids)
+    print(url)
+    return url
+
+
+def main(argv=sys.argv):
+    segments_ids = None if len(argv) < 2 else argv[1]
+    speed_data = download_speed_data(first_param=segments_ids)
+    print(speed_data)
+
+
+def main(argv=sys.argv):
+    a = 9 if len(argv) < 2 else int(argv[1])
+    b = 3 if len(argv) < 3 else int(argv[2])
+    xdivide(a, b)
+
+def main(argv=sys.argv):
+    segments_ids = None if len(argv) < 2 else argv[1]
+    x(segments_ids)
