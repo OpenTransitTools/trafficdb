@@ -24,7 +24,7 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
                 if the sub-segment speed is more than 5 mph different from the speed on the overall segment.
     """
     url = "{}?action={}&format={}&units={}&resolution={}".format(
-          ini().get('traffic_url'),
+        ini().get('traffic_url'),
           service, format, units, resolution
     )
 
@@ -52,12 +52,13 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
     return url
 
 
-def speeds_url_state(geo_id="243"):
+def speeds_url_state(geo_id=None):
     """
     geo_id = INRIX's geoID for Oregon is 243
     http://api.inrix.com/Traffic/Inrix.ashx?action=GetSegmentSpeedInGeography&geoID=243&token=
     :see: http://docs.inrix.com/traffic/speed/
     """
+    geo_id = geo_id or "243"
     url = "{}&geoID={}".format(make_inrix_url(SPEED_VIA_GEOM_ID), geo_id)
     return url
 
@@ -67,13 +68,13 @@ def speeds_url_bbox(bbox=None):
     ?action=GetSegmentSpeedinBox
     :see: http://docs.inrix.com/traffic/speed/#get-getsegmentspeedinbox
     """
-    bbox = "45.596874,-122.657228,45.425134,-122.612066" if bbox is None else bbox
+    bbox = bbox or "45.596874,-122.657228,45.425134,-122.612066"
     pt1, pt2 = geo_utils.bbox_to_points(bbox, sep="|")
     url = "{}&corner1={}&corner2={}".format(make_inrix_url(SPEED_VIA_BBOX), pt1, pt2)
     return url
 
 
-def speeds_url_segments(segment_ids="385703529,385862590,385869437,385869437,440964536,440964537"):
+def speeds_url_segments(segment_ids=None):
     """
     segments: 13th & Bybee Blvd are 385703529,385862590,385869437,385869437,440964536,440964537
 
@@ -83,5 +84,6 @@ def speeds_url_segments(segment_ids="385703529,385862590,385869437,385869437,440
 
     :see: http://docs.inrix.com/traffic/speed/#get-getsegmentspeed
     """
+    segment_ids = segment_ids or "385703529,385862590,385869437,385869437,440964536,440964537"
     url = "{}&segments={}".format(make_inrix_url(SPEED_VIA_SEGMENT_IDs), segment_ids)
     return url
