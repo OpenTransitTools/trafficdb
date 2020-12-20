@@ -1,4 +1,5 @@
 from .base import ini
+from ott.utils import geo_utils
 
 
 # service names
@@ -10,7 +11,7 @@ SPEED_VIA_SEGMENT_IDs="GetSegmentSpeed"
 def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=None, format="json"):
     """
     base url routine will build INRIX traffic (speed data) requests
-    note: a 'token' is additionally necessary on these urls
+    note: a 'token' parameter is also necessary on these urls in order to pull data from INRIX
 
     service is the 'name' of the INRIX speed service
 
@@ -21,9 +22,6 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
                 in terms of offsets. The length of the sub-segment will be based on the resolution specified. The
                 default is 0, which means "full resolution" or one section per segment. Sub-segments are only returned
                 if the sub-segment speed is more than 5 mph different from the speed on the overall segment.
-
-    startTime:  Query Datetime The expected traffic at this time. The default is the current time. All times should be
-                in UTC or have the timezone offset as specified in DateTime Values
     """
     url = "{}?action={}&format={}&units={}&resolution={}".format(
           ini().get('traffic_url'),
@@ -36,6 +34,8 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
                subsequent sets will have a minute value that is a multiple of the interval value. For example, an
                interval value of 30 specifies data sets on the hour and 30 minutes past the hour. The interval parameter
                is used in conjunction with the duration parameter.
+    
+    note: not sure this parameter is valid for all speed data services (it's only documented in some bulk services)
     """
     if interval:
         url = "{}&interval={}".format(url, interval)
@@ -43,6 +43,8 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
     """
     startTime:  Query Datetime The expected traffic at this time. The default is the current time. All times should be
                 in UTC or have the timezone offset as specified in DateTime Values
+
+    note: not sure this parameter is valid for all speed data services (it's only documented in some bulk services)
     """
     if start_time:
         url = "{}&startTime={}".format(url, start_time)
@@ -60,12 +62,14 @@ def speeds_url_state(geo_id="243"):
     return url
 
 
-def speeds_url_bbox(lat_lon_1="45.55|-122.55", lat_lon_2="45.56|-122.56"):
+def speeds_url_bbox(bbox=None):
     """
     ?action=GetSegmentSpeedinBox
     :see: http://docs.inrix.com/traffic/speed/#get-getsegmentspeedinbox
     """
-    url = "{}&corner1={}&corner2={}".format(make_inrix_url(SPEED_VIA_BBOX), lat_lon_1, lat_lon_2)
+    bbox = "45.596874,-122.657228,45.425134,-122.612066" if bbox is None else bbox
+    pt1, pt2 = geo_utils.bbox_to_points(bbox, sep="|")
+    url = "{}&corner1={}&corner2={}".format(make_inrix_url(SPEED_VIA_BBOX), pt1, pt2)
     return url
 
 

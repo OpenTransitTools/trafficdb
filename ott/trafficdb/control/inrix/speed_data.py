@@ -1,7 +1,8 @@
 import sys
 import time
 import requests
-from  . import urls
+from .urls import speeds_url_segments
+from . import urls
 
 import logging
 log = logging.getLogger(__file__)
@@ -45,39 +46,20 @@ def download_speed_data(func=speeds_url_segments, first_param=None, count=0, num
 
 
 def smart_divide(func):
-    def inner(a, b):
-        print("I am going to divide", a, "and", b)
-        if b == 0:
-            print("Whoops! cannot divide")
-            return
-
-        print(func)
-        return func(a, b)
+    def inner(param):
+        url = func(param)
+        if('xxx' in url and 'stop' not in param):
+            inner(param, stop=True)
+        print(url)
     return inner
 
 
 @smart_divide
-def xdivide(a, b):
-    print(a * b)
-
-
-def x(segment_ids=None):
-    url = urls.speeds_url_segments(segment_ids)
-    print(url)
+def x(param=None):
+    url = urls.speeds_url_segments(param)
+    url = urls.speeds_url_bbox(param)
     return url
 
-
+#    def main(argv=sys.argv[1:]):
 def main(argv=sys.argv):
-    segments_ids = None if len(argv) < 2 else argv[1]
-    speed_data = download_speed_data(first_param=segments_ids)
-    print(speed_data)
-
-
-def main(argv=sys.argv):
-    a = 9 if len(argv) < 2 else int(argv[1])
-    b = 3 if len(argv) < 3 else int(argv[2])
-    xdivide(a, b)
-
-def main(argv=sys.argv):
-    segments_ids = None if len(argv) < 2 else argv[1]
-    x(segments_ids)
+    x(argv[1] if len(argv) > 1 else None)
