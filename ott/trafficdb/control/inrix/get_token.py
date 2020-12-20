@@ -10,7 +10,7 @@ def get_inrix_token(renew=False):
 
     FYI: git update-index --assume-unchanged config/base.ini
     """
-    #import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     token = None
 
     # step 1: try to get a cached token from someplace

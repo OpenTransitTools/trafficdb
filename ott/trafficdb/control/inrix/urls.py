@@ -1,11 +1,12 @@
-from .base import ini
+import enum
 from ott.utils import geo_utils
-
+from .base import ini
 
 # service names
-SPEED_VIA_BBOX="GetSegmentSpeedinBox"
-SPEED_VIA_GEOM_ID="GetSegmentSpeedInGeography"
-SPEED_VIA_SEGMENT_IDs="GetSegmentSpeed"
+class InrixService(enum.Enum):
+  GetSegmentSpeedinBox = 1
+  GetSegmentSpeedInGeography = 2
+  GetSegmentSpeed = 3
 
 
 def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=None, format="json"):
@@ -23,6 +24,7 @@ def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=
                 default is 0, which means "full resolution" or one section per segment. Sub-segments are only returned
                 if the sub-segment speed is more than 5 mph different from the speed on the overall segment.
     """
+    # import pdb; pdb.set_trace()
     url = "{}?action={}&format={}&units={}&resolution={}".format(
         ini().get('traffic_url'),
           service, format, units, resolution
@@ -59,7 +61,7 @@ def speeds_url_state(geo_id=None):
     :see: http://docs.inrix.com/traffic/speed/
     """
     geo_id = geo_id or "243"
-    url = "{}&geoID={}".format(make_inrix_url(SPEED_VIA_GEOM_ID), geo_id)
+    url = "{}&geoID={}".format(make_inrix_url(InrixService.GetSegmentSpeedInGeography.name), geo_id)
     return url
 
 
@@ -70,7 +72,7 @@ def speeds_url_bbox(bbox=None):
     """
     bbox = bbox or "45.596874,-122.657228,45.425134,-122.612066"
     pt1, pt2 = geo_utils.bbox_to_points(bbox, sep="|")
-    url = "{}&corner1={}&corner2={}".format(make_inrix_url(SPEED_VIA_BBOX), pt1, pt2)
+    url = "{}&corner1={}&corner2={}".format(make_inrix_url(InrixService.GetSegmentSpeedinBox.name), pt1, pt2)
     return url
 
 
@@ -84,6 +86,7 @@ def speeds_url_segments(segment_ids=None):
 
     :see: http://docs.inrix.com/traffic/speed/#get-getsegmentspeed
     """
+    # import pdb; pdb.set_trace()
     segment_ids = segment_ids or "385703529,385862590,385869437,385869437,440964536,440964537"
-    url = "{}&segments={}".format(make_inrix_url(SPEED_VIA_SEGMENT_IDs), segment_ids)
+    url = "{}&segments={}".format(make_inrix_url(InrixService.GetSegmentSpeed.name), segment_ids)
     return url

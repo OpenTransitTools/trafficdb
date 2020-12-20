@@ -9,7 +9,7 @@ log = logging.getLogger(__file__)
 
 def download_speed_data(func=None):
     """
-    closure that will grab data from 
+    closure that will grab data from a given service...
 
     http://na.api.inrix.com/traffic/Inrix.ashx?format=json&action=getsecuritytoken&vendorid=<your vid>&consumerid=<your cid>
     will return json, ala { result: { token: < me> }, ... }
