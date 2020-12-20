@@ -1,5 +1,5 @@
-import sys
 import requests
+
 from . import urls
 from .get_token import get_inrix_token
 
@@ -37,14 +37,42 @@ def download_speed_data(func=None):
 
 
 @download_speed_data
-def call_data_service(service=None, param=None):
-    if not service:
-        url = urls.speeds_url_bbox(param)
-    else:
-        url = urls.speeds_url_segments(param)
-    return url
+def call_data_service(service_name=None, param=None):
+    inrix_svc = urls.InrixService.find_service(service_name)
+    data = inrix_svc(param)
+    return data
 
 
-def main(argv=sys.argv):
-    data = call_data_service(argv[1] if len(argv) > 1 else None)
+def make_cmd_line(prog_name="bin/inrix_speed_data", services_enum=None, do_parse=True):
+    """
+    todo: make generic for other traffic/speed vendors
+    """
+    from ott.utils.parse.cmdline.base_cmdline import empty_parser
+    parser = empty_parser(prog_name)
+
+    parser.add_argument(
+        '--service',
+        '-svc',
+        '-s',
+        choices = services_enum.get_service_names(),
+        help="service name"
+    )
+
+    parser.add_argument(
+        '--param',
+        '-param',
+        '-p',
+        help="optional service parameter"
+    )
+
+    ret_val = parser
+    if do_parse:
+        # finalize the parser
+        ret_val = parser.parse_args()
+    return ret_val
+
+
+def main():
+    cmd = make_cmd_line(services_enum=urls.InrixService)
+    data = call_data_service(cmd.service, cmd.param)
     print(data)

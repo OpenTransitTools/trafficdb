@@ -8,6 +8,21 @@ class InrixService(enum.Enum):
   GetSegmentSpeedInGeography = 2
   GetSegmentSpeed = 3
 
+  @classmethod
+  def get_service_names(cls):
+      ret_val = [e.name for e in cls]
+      return ret_val
+
+  @classmethod
+  def find_service(cls, name):
+      if name == cls.GetSegmentSpeedinBox.name:
+          ret_val = speeds_url_bbox
+      elif name == cls.GetSegmentSpeedInGeography.name:
+          ret_val = speeds_url_state
+      else:
+          ret_val = speeds_url_segments
+      return ret_val
+
 
 def make_inrix_url(service, units="0", resolution=50, interval=None, start_time=None, format="json"):
     """
