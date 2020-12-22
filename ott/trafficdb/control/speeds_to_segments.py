@@ -23,7 +23,7 @@ def main(cmd_name="bin/speeds_to_segments"):
     is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
     session = Database.make_session(url, schema, is_geospatial)
 
-    segment_ids = TrafficSegment.get_segment_ids(session, 16)
+    segment_ids = TrafficSegment.get_segment_ids(session)
     s = ','.join(map(str, segment_ids))
     data = call_data_service(speeds_url_segments, s)
 
@@ -33,7 +33,6 @@ def main(cmd_name="bin/speeds_to_segments"):
         for r in ss['segments']:
             sr = TrafficSegmentSpeed.inrix_factory(r)
             speed_recs.append(sr)
-
 
     session.add_all(speed_recs)
     session.commit()
@@ -47,7 +46,8 @@ def main(cmd_name="bin/speeds_to_segments"):
     for s in segments:
         if s.speeds and len(s.speeds) > 0:
             print(s.__dict__)
-            print(s.speeds.__dict__)
+            for k in s.speeds:
+                print(k.__dict__)
 
 
 if __name__ == '__main__':
