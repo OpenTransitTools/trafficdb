@@ -12,13 +12,13 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
  - buildout
  - psql -c "CREATE USER ott;";  psql -c "CREATE DATABASE ott;"
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 
-   - bin/load-gtfs-and-speed-data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
+   - bin/load_gtfs_data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
  - step 2: load traffic vendor street / segment data (INRIX in this case)
    - ott/trafficdb/model/inrix/load_inrix_geojson.sh INRIX/USA_*.geojson
  - step 3: match/conflate stop-segments with traffic segment data
-   - bin/match-segments
+   - bin/match_segments
  - step 4: load speed data from INRIX into db (on-going ... run every 5 mintutes?)
-   - bin/load-speed-data 
+   - bin/load_speed_data
  - step 5: plot lastest segment / speed data on the example map
    - bin/generate-speed-geojson --show-map
 

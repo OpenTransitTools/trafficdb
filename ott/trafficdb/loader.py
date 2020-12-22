@@ -25,20 +25,7 @@ def make_db_url_schema(config=None, args=None, cmd_name='bin/blah', section="db"
     return url, schema
 
 
-def load_speed_data(cmd_name='bin/load-speed-data'):
-    # TODO: put this config / cmd-line into a util
-    config, args = make_args_config(cmd_name)
-    url, schema = make_db_url_schema(config, args)
-    is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
-
-    session = Database.make_session(url, schema, is_geospatial, args.create)
-    StopSegment.load(session)
-    session.commit()
-    session.commit()  # think I need 2 commits due to session create + begin_nested being created above.
-    session.flush()
-
-
-def load_gtfs_and_speed_data(cmd_name='bin/load-gtfs-and-speed-data'):
+def load_gtfs_data(cmd_name='bin/load_gtfs_data'):
     """
     complete load: will load gtfs and then do stop segmentation, etc...
     bin/load-gtfs-and-speed-data -c -g -s tm -d postgres://localhost/ott https://developer.trimet.org/schedule/gtfs.zip
@@ -83,8 +70,26 @@ def segments_to_geojson():
     print(geojson)
 
 
+""" STILL NEEDED???
+def load_speed_data(cmd_name='bin/load-speed-data'):
+    # TODO: put this config / cmd-line into a util
+    config, args = make_args_config(cmd_name)
+    url, schema = make_db_url_schema(config, args)
+    is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
+
+    session = Database.make_session(url, schema, is_geospatial, args.create)
+    StopSegment.load(session)
+    session.commit()
+    session.commit()  # think I need 2 commits due to session create + begin_nested being created above.
+    session.flush()
+
+
 def main():
     load_speed_data()
+"""
+
+def main():
+    load_gtfs_data()
 
 
 if __name__ == '__main__':

@@ -35,10 +35,18 @@ def main(cmd_name="bin/speeds_to_segments"):
             speed_recs.append(sr)
 
 
+    session.add_all(speed_recs)
+    session.commit()
+    session.flush()
+    session.flush()
+
     print(data)
     print("")
-    for sr in speed_recs:
-        print(sr.__dict__)
+    import pdb; pdb.set_trace()
+    segments = session.query(TrafficSegment).all()
+    for s in segments:
+        print(s.__dict__)
+        print(s.speeds.__dict__)
 
 
 if __name__ == '__main__':
