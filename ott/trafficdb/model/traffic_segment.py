@@ -38,6 +38,13 @@ class TrafficSegment(Base):
     speed_limit = Column(Numeric(20, 10), nullable=False, default=0.0)
     street_type = Column(Enum(StreetType), nullable=False, default=StreetType.arterial)
 
+    stop_segments = relationship(
+        'StopSegment',
+        primaryjoin='TrafficSegment.stop_segment_id==StopSegment.id',
+        foreign_keys='(TrafficSegment.stop_segment_id)',
+        #order_by='StopTime.stop_sequence',
+        uselist=True, viewonly=True)
+
     speeds = relationship(
         'TrafficSegmentSpeed',
         primaryjoin='TrafficSegment.id==TrafficSegmentSpeed.segment_id',
@@ -67,6 +74,10 @@ class TrafficSegment(Base):
         ts.street_type = StreetType.get_name(traffic_segment.frc)
 
         return ts
+
+    @classmethod
+    def get_segment_ids(cls):
+        pass
 
     @classmethod
     def add_geometry_column(cls):

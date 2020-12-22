@@ -2,6 +2,7 @@ import requests
 
 from . import urls
 from .get_token import get_inrix_token
+from ott.utils import string_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -21,9 +22,9 @@ def download_speed_data(func=None):
 
     FYI: git update-index --assume-unchanged config/base.ini
     """
-    def inner(param, force=False):
+    def inner(service_name, param, force=False):
         # step 1: get url (existing token)
-        url = "{}&token={}".format(func(param), get_inrix_token(renew=force))
+        url = "{}&token={}".format(func(service_name, param), get_inrix_token(renew=force))
         log.info(url)
 
         # step 2: call service
@@ -31,13 +32,14 @@ def download_speed_data(func=None):
 
         # step 3: if token is bad, call things again (via recursion) and ask to renew token
         if(ret_val['statusText'] in ['TokenExpired', 'BadToken'] and not force):
-            ret_val = inner(param, force=True)
+            ret_val = inner(service_name, param, force=True)
         return ret_val
     return inner
 
 
 @download_speed_data
 def call_data_service(service_name=None, param=None):
+    #import pdb; pdb.set_trace()
     inrix_svc = urls.InrixService.find_service(service_name)
     data = inrix_svc(param)
     return data
@@ -74,5 +76,5 @@ def make_cmd_line(prog_name="bin/inrix_speed_data", services_enum=None, do_parse
 
 def main():
     cmd = make_cmd_line(services_enum=urls.InrixService)
-    data = call_data_service(cmd.service, cmd.param)
+    data = call_data_service(cmd.service, string_utils.safe_replace(cmd.param, '"', ''))
     print(data)

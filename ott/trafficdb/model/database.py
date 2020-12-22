@@ -90,7 +90,7 @@ class Database(object):
         from .stop_segment_trip import StopSegmentTrip
         from .inrix.inrix_segment import InrixSegment
         from .traffic_segment import TrafficSegment
-        from .segment_speed import TrafficSegmentSpeed
+        from .traffic_segment_speed import TrafficSegmentSpeed
 
         if cls.db_singleton is None:
             cls.db_singleton = Database(url, schema, is_geospatial)
