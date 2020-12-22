@@ -12,7 +12,7 @@ class TrafficSegmentSpeed(Base):
     __tablename__ = 'traffic_segment_speed'
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    segment_id = Column(String(255), index=True, nullable=False)
+    traffic_segment_id = Column(String(255), index=True, nullable=False)
 
     is_realtime = Column(Boolean, nullable=False, default=False)
     rt_confidence = Column(Integer, default=0)
@@ -47,7 +47,7 @@ class TrafficSegmentSpeed(Base):
         """
         # import pdb; pdb.set_trace()
         tss = TrafficSegmentSpeed()
-        tss.segment_id = rec['code']
+        tss.traffic_segment_id = rec['code']
         tss.average_speed = rec['average']
         tss.freeflow_speed = rec['reference']
         tss.current_speed = rec['speed']

@@ -47,8 +47,8 @@ class TrafficSegment(Base):
 
     speeds = relationship(
         'TrafficSegmentSpeed',
-        primaryjoin='TrafficSegment.id==TrafficSegmentSpeed.segment_id',
-        foreign_keys='(TrafficSegment.id)',
+        primaryjoin='TrafficSegment.traffic_segment_id==TrafficSegmentSpeed.traffic_segment_id',
+        foreign_keys='(TrafficSegment.traffic_segment_id)',
         uselist=True, viewonly=True)
 
     def __init__(self, stop_segment, traffic_segment):

@@ -42,11 +42,12 @@ def main(cmd_name="bin/speeds_to_segments"):
 
     print(data)
     print("")
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     segments = session.query(TrafficSegment).all()
     for s in segments:
-        print(s.__dict__)
-        print(s.speeds.__dict__)
+        if s.speeds and len(s.speeds) > 0:
+            print(s.__dict__)
+            print(s.speeds.__dict__)
 
 
 if __name__ == '__main__':
