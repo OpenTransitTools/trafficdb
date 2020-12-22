@@ -49,7 +49,6 @@ class TrafficSegment(Base):
         'TrafficSegmentSpeed',
         primaryjoin='TrafficSegment.id==TrafficSegmentSpeed.segment_id',
         foreign_keys='(TrafficSegment.id)',
-        #order_by='StopTime.stop_sequence',
         uselist=True, viewonly=True)
 
     def __init__(self, stop_segment, traffic_segment):
@@ -76,8 +75,14 @@ class TrafficSegment(Base):
         return ts
 
     @classmethod
-    def get_segment_ids(cls):
-        pass
+    def get_segment_ids(cls, session, limit=None):
+        ret_val = []
+        segs = session.query(TrafficSegment)
+        if limit:
+            segs = segs.limit(limit)
+        for s in segs.all():
+            ret_val.append(s.traffic_segment_id)
+        return ret_val
 
     @classmethod
     def add_geometry_column(cls):

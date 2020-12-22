@@ -56,6 +56,7 @@ setup(
         [console_scripts]
         inrix_auth_token = ott.trafficdb.control.inrix.get_token:main
         inrix_speed_data = ott.trafficdb.control.inrix.speed_data:main
+        speeds_to_segments = ott.trafficdb.control.speeds_to_segments:main
 
         load-speed-data = ott.trafficdb.loader:load_speed_data
         load-gtfs-and-speed-data = ott.trafficdb.loader:load_gtfs_and_speed_data
