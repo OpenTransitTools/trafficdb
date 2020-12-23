@@ -62,5 +62,6 @@ setup(
         match_segments = ott.trafficdb.control.conflate.match_segments:main
 
         geojson_segments = ott.trafficdb.loader:segments_to_geojson
+        printer = ott.trafficdb.control.printer:main
     """,
 )

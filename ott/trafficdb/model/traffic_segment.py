@@ -35,20 +35,19 @@ class TrafficSegment(Base):
     lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
     distance = Column(Numeric(20, 10), nullable=False, default=0.0)
     direction = Column(String(2))
-    speed_limit = Column(Numeric(20, 10), nullable=False, default=0.0)
     street_type = Column(Enum(StreetType), nullable=False, default=StreetType.arterial)
 
-    stop_segments = relationship(
+    stop_segment = relationship(
         'StopSegment',
         primaryjoin='TrafficSegment.stop_segment_id==StopSegment.id',
         foreign_keys='(TrafficSegment.stop_segment_id)',
-        #order_by='StopTime.stop_sequence',
-        uselist=True, viewonly=True)
+        uselist=False, viewonly=True)
 
     speeds = relationship(
         'TrafficSegmentSpeed',
         primaryjoin='TrafficSegment.traffic_segment_id==TrafficSegmentSpeed.traffic_segment_id',
         foreign_keys='(TrafficSegment.traffic_segment_id)',
+        # order_by='StopTime.stop_sequence',
         uselist=True, viewonly=True)
 
     def __init__(self, stop_segment, traffic_segment):
@@ -67,9 +66,10 @@ class TrafficSegment(Base):
         ts = TrafficSegment(stop_segment, traffic_segment)
 
         # custom inrix parsing
-        ts.lanes = num_utils.to_float(traffic_segment.lanes, 0.0)
-        ts.distance = num_utils.to_float(traffic_segment.distance, 0.0)
+        # TODO: Gtfs might be in different units ... here we're converting to feet (since I think that's what TM's gtfs is)
+        ts.distance = num_utils.to_float(traffic_segment.distance, 0.0) * 5280
         ts.direction = traffic_segment.direction
+        ts.lanes = num_utils.to_float(traffic_segment.lanes, 0.0)
         ts.street_type = StreetType.get_name(traffic_segment.frc)
 
         return ts
@@ -88,3 +88,32 @@ class TrafficSegment(Base):
     def add_geometry_column(cls):
         if not hasattr(cls, 'geom'):
             cls.geom = deferred(Column(Geometry(geometry_type='LINESTRING', srid=4326)))
+
+    @classmethod
+    def print_all(cls, session, limit=None, just_speeds=False):
+        q = session.query(TrafficSegment).order_by(TrafficSegment.stop_segment_id)
+        if limit and type(limit) is int:
+            q.limit(limit)
+        segments = q.all()
+
+        for s in segments:
+            if just_speeds and (s.speeds is None or len(s.speeds) < 1):
+                continue
+            s.print()
+
+    def print(self, latest_speed_filter=False):
+        # import pdb; pdb.set_trace()
+        out = "\nsegments: {} ({} {}) -- {} ({} {}):\n". \
+            format(
+                self.stop_segment_id, self.stop_segment.direction, self.stop_segment.distance,
+                self.traffic_segment_id, self.direction, self.distance
+            )
+
+        if self.speeds and len(self.speeds) > 0:
+            # TODO: sort speeds / only show latest speed if filter says so...
+            for s in self.speeds:  # only show latest sort by capture time
+                out += "   speed:{}  free:{}  avg:{}  time:{} (realtime = {} @ {}%) \n".format(
+                    s.current_speed, s.freeflow_speed, s.average_speed, s.travel_time,
+                    s.is_realtime, s.rt_confidence
+                )
+        print(out)
