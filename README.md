@@ -10,7 +10,9 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
  - git clone https://github.com/OpenTransitTools/trafficdb.git
  - cd trafficdb
  - buildout
- - psql -c "CREATE USER ott;";  psql -c "CREATE DATABASE ott;"
+ - scripts/create_db.sh
+ - bin/load_all -c -g -s ttt -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
+ 
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 
    - bin/load_gtfs_data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
  - step 2: load traffic vendor street / segment data (INRIX in this case)

@@ -18,7 +18,7 @@ class InrixSegment(Base):
     lanes = Column(String)
     frc = Column(String)
 
-    def __init__(self, session, segment, trip):
+    def __init__(self):
         super(InrixSegment, self).__init__()
 
     @classmethod
