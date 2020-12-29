@@ -58,11 +58,14 @@ setup(
         inrix_segment_data = ott.trafficdb.control.inrix.segment_data:main
         inrix_speed_data = ott.trafficdb.control.inrix.speed_data:main
 
-        load_gtfs_data = ott.trafficdb.loader:load_gtfs_data
+        load_all = ott.trafficdb.control.loader:load_all
+        load_gtfsdb = ott.trafficdb.control.loader:load_gtfsdb
+        load_stop_segments = ott.trafficdb.control.loader:load_stop_segments
+        
         load_speed_data = ott.trafficdb.control.speeds_to_segments:main
         match_segments = ott.trafficdb.control.conflate.match_segments:main
 
-        geojson_segments = ott.trafficdb.loader:segments_to_geojson
-        printer = ott.trafficdb.control.printer:main
+        printer = ott.trafficdb.view.printer:main
+        view_map = ott.trafficdb.view.geojson:main
     """,
 )
