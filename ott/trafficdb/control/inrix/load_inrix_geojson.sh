@@ -9,7 +9,7 @@ user=${DB_USER:=ott}
 schema=${DB_SCHEMA:=trimet}
 table_name=${TABLE_NAME:=traffic_inrix_segments}
 rename_columns=${COL_RENAME:="xdsegid=id, bearing=direction, miles=distance"}
-geojson_files=${*:-"$DIR/test/inrix.geojson"}
+geojson_files=${*:-"$DIR/../../model/inrix/test/inrix.geojson"}
 
 db_opts="-f 'PostgreSQL' PG:'dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
 table_cmd="-nln $table_name"

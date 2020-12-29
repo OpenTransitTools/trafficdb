@@ -7,6 +7,7 @@ from ott.utils import string_utils
 import logging
 log = logging.getLogger(__file__)
 
+
 def call_data_service(inrix_url_method=None, param=None):
     """
     grab data from a given service...
@@ -50,13 +51,14 @@ def make_cmd_line(prog_name="bin/inrix_speed_data", services_enum=None, do_parse
     from ott.utils.parse.cmdline.base_cmdline import empty_parser
     parser = empty_parser(prog_name)
 
-    parser.add_argument(
-        '--service',
-        '-svc',
-        '-s',
-        choices = services_enum.get_service_names(),
-        help="service name"
-    )
+    if services_enum:
+        parser.add_argument(
+            '--service',
+            '-svc',
+            '-s',
+            choices = services_enum.get_service_names(),
+            help="service name"
+        )
 
     parser.add_argument(
         '--param',
@@ -73,6 +75,9 @@ def make_cmd_line(prog_name="bin/inrix_speed_data", services_enum=None, do_parse
 
 
 def main():
+    """
+    bin/inrix_speed_data -s GetSegmentSpeedinBox -p \"45.5,-122.5,45.6,-122.6\"
+    """
     cmd = make_cmd_line(services_enum=urls.InrixService)
     inrix_url_method = urls.InrixService.find_service(cmd.service)
     param = string_utils.safe_replace(cmd.param, '"', '')

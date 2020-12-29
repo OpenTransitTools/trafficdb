@@ -2,6 +2,9 @@ import requests
 from ott.utils import token_utils
 from .base import ini
 
+import logging
+log = logging.getLogger(__file__)
+
 
 def get_inrix_token(renew=False):
     """
@@ -26,6 +29,8 @@ def get_inrix_token(renew=False):
         vendorid = ini().get('vendorid')
         consumerid = ini().get('consumerid')
         token_url = "{}?action=getsecuritytoken&format=json&vendorid={}&consumerid={}".format(url, vendorid, consumerid)
+        log.warning(token_url)
+
         resp = requests.get(token_url)
         token = resp.json()['result']['token']
 
