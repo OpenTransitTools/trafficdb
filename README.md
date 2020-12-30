@@ -6,12 +6,12 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
 ### See: https://opentransittools.github.io/trafficdb/#13.83/45.51357/-122.66579/0/20
 
 ### Steps:
- - install: git, postgres, postgis, python 3.x, zc.buildout
+ - install: git, postgres, psql, postgis, ogr2ogr, python 3.x, zc.buildout
  - git clone https://github.com/OpenTransitTools/trafficdb.git
  - cd trafficdb
  - buildout
  - scripts/create_db.sh
- - bin/load_all -c -g -s ttt -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
+ - bin/load_all -c -g -s trimet -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
  
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 
    - bin/load_gtfs_data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip

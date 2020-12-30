@@ -2,7 +2,10 @@ from gtfsdb.scripts import get_args
 
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
+from ott.trafficdb.model.traffic_segment import TrafficSegment
 from ott.trafficdb.view.geojson import stop_geojson, local_server
+from ott.trafficdb.control.inrix.segment_data import load as inrix_segment_loader
+from ott.trafficdb.control.conflate.match_segments import match_traffic_to_stop_segments
 
 import logging
 log = logging.getLogger(__file__)
@@ -26,7 +29,7 @@ def load_stop_segments(session=None):
     note: will also
     bin/load_stop_segments -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
     """
-    #import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     if session is None:
         session = Database.make_session(args.database_url, args.schema, args.is_geospatial, args.create)
     StopSegment.load(session)
@@ -51,16 +54,28 @@ def load_all():
     bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
     """
 
-    # step 1: load gtfsdb + calculate all stop-to-stop segments in the data
+    # step 1: create db session for the traffic tables
+    session = Database.make_session(args.database_url, args.schema, args.is_geospatial, args.create)
+
+    # step 2: load gtfsdb + calculate all stop-to-stop segments in the data
     if args.file not in "skippp":
-        load_gtfsdb()
+        load_gtfsdb(session)
 
-    # step 2: load traffic vendor data
-    f
+    # step 3: load traffic vendor's street / segment data
+    if args.file not in "skipp":
+        inrix_segment_loader(schema=args.schema)
 
+    # step 4: conflate traffic vendor data with transit (stop segment) data from above
+    # import pdb; pdb.set_trace()
+    from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
+    segments = match_traffic_to_stop_segments(session, InrixSegment)
+    if segments:
+        TrafficSegment.clear_tables(session)
+        session.add_all(segments)
+        session.commit()
+        session.flush()
 
-    # step 2: load stop segments
-    session = Database.make_session(args.database_url, args.schema, args.is_geospatial)
+    # step 5: load stop segments
     stop_geojson(session)
     #local_server()
 

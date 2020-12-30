@@ -16,7 +16,7 @@ log = logging.getLogger(__file__)
 
 def main(cmd_name="bin/speeds_to_segments"):
     """ simple demo """
-    from ott.trafficdb.loader import make_args_config, make_db_url_schema
+    from .utils import make_args_config, make_db_url_schema
 
     config, args = make_args_config(cmd_name)
     url, schema = make_db_url_schema(config, args)

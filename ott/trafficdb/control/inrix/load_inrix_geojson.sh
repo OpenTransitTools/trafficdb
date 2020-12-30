@@ -1,6 +1,9 @@
 ##
 ## geojson -> postgis load script via ogr2ogr
+##
+##
 ## note: it should be generic to bring any geojson file in, but is written with INRIX in mind
+## note: this script assumes a "LOCAL" PostGIS db running on port 5432
 ##
 DIR=`dirname $0`
 
