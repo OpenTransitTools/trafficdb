@@ -75,10 +75,6 @@ class TrafficSegment(Base):
         return ts
 
     @classmethod
-    def get_bbox(cls, session, buffer=0.0):
-        segs = session.query(TrafficSegment)
-
-    @classmethod
     def get_segment_ids(cls, session, limit=None):
         ret_val = []
         segs = session.query(TrafficSegment)

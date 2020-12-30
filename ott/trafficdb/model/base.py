@@ -2,6 +2,7 @@ import enum
 import abc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String
+from geoalchemy2 import func
 
 import logging
 log = logging.getLogger(__file__)
@@ -154,6 +155,15 @@ class _Base(object):
         if remove_old:
             engine.execute(table.delete())
         engine.execute(table.insert(), records)
+
+    @classmethod
+    def bbox(cls, session, buffer=0.0000000001):
+        ret_val = None
+        try:
+            ret_val = session.scalar(func.ST_Extent(func.ST_Buffer(cls.geom, buffer)))
+        except:
+            log.warning("bbox no go on this geom")
+        return ret_val
 
 
 Base = declarative_base(cls=_Base)

@@ -1,18 +1,33 @@
 trafficdb
 ====
-The Traffic database aims to bring GTFS, OSM and Traffic (Speed) data together. This project grew out of the US-FTA's 
-Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
+The Traffic Database aims to bring GTFS, OSM and Traffic (Speed) data together. This project grew out of the US-FTA's 
+Integrated Mobility Innovation (IMI) program -- see https://trimet.org/imi/about.htm
 
-### See: https://opentransittools.github.io/trafficdb/#13.83/45.51357/-122.66579/0/20
+#### Example map: https://opentransittools.github.io/trafficdb/#13.83/45.51357/-122.66579/0/20
 
-### Steps:
+## Two options to install and run trafficdb (eventually) are either Docker Install or Manual Install
+
+### Docker Install: todo
+
+### Manual Install (step 1: mock data load):
  - install: git, postgres, psql, postgis, ogr2ogr, python 3.x, zc.buildout
  - git clone https://github.com/OpenTransitTools/trafficdb.git
  - cd trafficdb
  - buildout
  - scripts/create_db.sh
- - bin/load_all -c -g -s trimet -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
+ - add your inrix creds to config/base.ini
+   - [inrix] 
+    - vendorid = ___ consumerid = ___
+    - note: if you don't do this, you won't see any speed data 
+ - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
  
+### Manual Install (real data load):
+##### if the above load_all worked well, then the next step will be to load a full dataset
+ - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/
+   - for the example below, using TriMet's latest GTFS file, you should download and unzip the USA_Oregon_geojson.zip file 
+ - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott -t USA_Oregon.geojson https://developer.trimet.org/schedule/gtfs.zip
+
+### Individual Processes: CLEANUP TODO
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 
    - bin/load_gtfs_data -c -g -s trimet -d postgres://ott@localhost/ott https://developer.trimet.org/schedule/gtfs.zip
  - step 2: load traffic vendor street / segment data (INRIX in this case)
@@ -24,7 +39,7 @@ Integrated Mobility Innovation (IMI) -- see https://trimet.org/imi/about.htm
  - step 5: plot lastest segment / speed data on the example map
    - bin/generate-speed-geojson --show-map
 
-######  note:  the load will take upwards of 1 hour (or more) ... but once done, you'll have a complete database with transit and speed data
+######  note: the load will take upwards of 1 hour (or more) ... but once done, you'll have a complete database with transit and speed data
  
 ## todo:
  - speed and osm data (example datasets) needed to complete things
