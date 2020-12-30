@@ -1,4 +1,4 @@
-from ott.utils import geo_utils
+
 
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
@@ -73,13 +73,9 @@ def load_all():
         segments = match_traffic_to_stop_segments(session, InrixSegment)
         if segments:
             TrafficSegment.clear_tables(session)
-            session.add_all(segments)
-            session.commit()
-            session.flush()
+            Database.persist_data(segments)
 
-
-    q = TrafficSegment.bbox(session, 0.001)
-    q = geo_utils.normalize_postgis_bbox(q)
+    q = TrafficSegment.bbox(session, 0.001, normalize=True)
     print(q)
 
 

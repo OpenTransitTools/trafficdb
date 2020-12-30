@@ -1,11 +1,51 @@
 import requests
 
+from ott.trafficdb.model.traffic_segment_speed import TrafficSegmentSpeed
+from ott.utils import string_utils
+
 from . import urls
 from .get_token import get_inrix_token
-from ott.utils import string_utils
 
 import logging
 log = logging.getLogger(__file__)
+
+
+def speeds_via_bbox(bbox):
+    """
+    query INRIX via bbox and return Speed ORM objects
+    :param bbox: string in the form of 45.5,-122.5,45.6,-122.6
+    :return: list of TrafficSegmentSpeed ORM objects
+    """
+    inrix_response = call_data_service(urls.speeds_url_bbox, bbox)
+    speed_recs = parse_speed_data(inrix_response)
+    return speed_recs
+
+
+def speeds_via_id(ids):
+    """
+    query INRIX via bbox and return Speed ORM objects
+    :param ids: string of INRIX xid segment ids in the form of 33333 or 22222,33333,44444,55555
+    :return: list of TrafficSegmentSpeed ORM objects
+    """
+    inrix_response = call_data_service(urls.speeds_url_segments, ids)
+    speed_recs = parse_speed_data(inrix_response)
+    return speed_recs
+
+
+def parse_speed_data(inrix_speeds_response):
+    """
+    will parse the speed response data, and return an array of ORM objects
+    :param data: from call to call_data_service()
+    :return: list of TrafficSegmentSpeed ORM objects
+    """
+    # import pdb; pdb.set_trace()
+    speed_recs = []
+    for ss in inrix_speeds_response['result']['segmentSpeeds']:
+        for r in ss['segments']:
+            sr = TrafficSegmentSpeed.inrix_factory(r)
+            speed_recs.append(sr)
+
+    return speed_recs
 
 
 def call_data_service(inrix_url_method=None, param=None):

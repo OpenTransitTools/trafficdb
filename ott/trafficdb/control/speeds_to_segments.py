@@ -1,53 +1,52 @@
-from sqlalchemy import and_, or_
-from geoalchemy2 import func
-
-from ott.utils import string_utils
-
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.traffic_segment import TrafficSegment
-from ott.trafficdb.model.traffic_segment_speed import TrafficSegmentSpeed
-
-from .inrix.speed_data import call_data_service
-from .inrix.urls import speeds_url_segments
+from ott.trafficdb.control.utils import make_session
 
 import logging
 log = logging.getLogger(__file__)
 
 
-def main(cmd_name="bin/speeds_to_segments"):
-    """ simple demo """
-    from .utils import make_args_config, make_db_url_schema
+# TODO how to make this vendor agnostic?
+# TODO do all vendors have a similar query by id and bbox?
+def speeds_via_bbox(bbox):
+    """
+    GET traffic speed data via bbox and return Speed ORM objects
+    :param bbox: string in the form of 45.5,-122.5,45.6,-122.6
+    :return: list of TrafficSegmentSpeed ORM objects
+    """
+    from .inrix.speed_data import speeds_via_bbox as inrix_speeds_via_bbox
+    return inrix_speeds_via_bbox(bbox)
 
-    config, args = make_args_config(cmd_name)
-    url, schema = make_db_url_schema(config, args)
-    is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
-    session = Database.make_session(url, schema, is_geospatial)
 
-    segment_ids = TrafficSegment.get_segment_ids(session)
-    s = ','.join(map(str, segment_ids))
-    data = call_data_service(speeds_url_segments, s)
+def speeds_via_id(ids):
+    """
+    GET traffic speed data via segment id(s) and return Speed ORM objects
+    :param ids: string in the form of 33333 or 22222,33333,44444,55555
+    :return: list of TrafficSegmentSpeed ORM objects
+    """
+    from .inrix.speed_data import speeds_via_id as inrix_speeds_via_id
+    inrix_speeds_via_id(ids)
 
+
+def main(cmd_name="bin/load_speed_data", via_bbox=True):
+    # step 1: cmd line options to obtain session
     # import pdb; pdb.set_trace()
-    speed_recs = []
-    for ss in data['result']['segmentSpeeds']:
-        for r in ss['segments']:
-            sr = TrafficSegmentSpeed.inrix_factory(r)
-            speed_recs.append(sr)
+    session = make_session(cmd_name)
 
-    session.add_all(speed_recs)
-    session.commit()
-    session.flush()
-    session.flush()
+    # step 2: http get the latest traffic speed data from vendor (either via bbox or vendor's segment ids)
+    if via_bbox:
+        bbox = TrafficSegment.bbox(session, 0.001, normalize=True)
+        speed_recs = speeds_via_bbox(bbox)
+    else:
+        segment_ids = TrafficSegment.get_segment_ids(session)
+        ids = ','.join(map(str, segment_ids))
+        speed_recs = speeds_via_id(ids)
 
-    print(data)
-    print("")
-    # import pdb; pdb.set_trace()
-    segments = session.query(TrafficSegment).all()
-    for s in segments:
-        if s.speeds and len(s.speeds) > 0:
-            print(s.__dict__)
-            for k in s.speeds:
-                print(k.__dict__)
+    # step 3: persist that data to database
+    Database.persist_data(session, speed_recs)
+
+    # step 4: query the db and print out the speed data
+    TrafficSegment.print_all(session, just_speeds=True)
 
 
 if __name__ == '__main__':

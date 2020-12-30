@@ -3,6 +3,7 @@ import abc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String
 from geoalchemy2 import func
+from ott.utils import geo_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -157,10 +158,12 @@ class _Base(object):
         engine.execute(table.insert(), records)
 
     @classmethod
-    def bbox(cls, session, buffer=0.0000000001):
+    def bbox(cls, session, buffer=0.0000000001, normalize=False):
         ret_val = None
         try:
             ret_val = session.scalar(func.ST_Extent(func.ST_Buffer(cls.geom, buffer)))
+            if normalize:
+                ret_val = geo_utils.normalize_postgis_bbox(ret_val)
         except:
             log.warning("bbox no go on this geom")
         return ret_val

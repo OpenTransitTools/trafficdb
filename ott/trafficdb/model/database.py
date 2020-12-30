@@ -102,6 +102,19 @@ class Database(object):
         return cls.db_singleton.session
 
     @classmethod
+    def persist_data(cls, session, data):
+        try:
+            if isinstance(data, list):
+                session.add_all(data)
+            else:
+                session.add(data)
+        except Exception as e:
+            log.warning(e)
+        finally:
+            session.commit()
+            session.flush()
+
+    @classmethod
     def connection(cls, raw_con, connection_record):
         if 'sqlite' in type(raw_con).__module__:
             db_utils.add_math_to_sqllite(raw_con, connection_record)
