@@ -1,4 +1,4 @@
-from gtfsdb.scripts import get_args
+from ott.utils import geo_utils
 
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
@@ -7,6 +7,7 @@ from ott.trafficdb.view.geojson import stop_geojson, local_server
 from ott.trafficdb.control.inrix.segment_data import load as inrix_segment_loader
 from ott.trafficdb.control.conflate.match_segments import match_traffic_to_stop_segments
 
+from gtfsdb.scripts import get_args
 import logging
 log = logging.getLogger(__file__)
 args, kwargs = get_args()
@@ -66,18 +67,25 @@ def load_all():
         inrix_segment_loader(schema=args.schema)
 
     # step 4: conflate traffic vendor data with transit (stop segment) data from above
-    # import pdb; pdb.set_trace()
-    from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
-    segments = match_traffic_to_stop_segments(session, InrixSegment)
-    if segments:
-        TrafficSegment.clear_tables(session)
-        session.add_all(segments)
-        session.commit()
-        session.flush()
+    if args.file not in "skip":
+        # import pdb; pdb.set_trace()
+        from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
+        segments = match_traffic_to_stop_segments(session, InrixSegment)
+        if segments:
+            TrafficSegment.clear_tables(session)
+            session.add_all(segments)
+            session.commit()
+            session.flush()
+
+
+    q = TrafficSegment.bbox(session, 0.001)
+    q = geo_utils.normalize_postgis_bbox(q)
+    print(q)
+
 
     # step 5: load stop segments
     stop_geojson(session)
-    local_server()
+    #local_server()
 
 
 def main():
