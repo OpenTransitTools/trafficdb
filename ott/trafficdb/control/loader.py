@@ -77,7 +77,7 @@ def load_all():
 
     # step 5: load stop segments
     stop_geojson(session)
-    #local_server()
+    local_server()
 
 
 def main():

@@ -11,7 +11,7 @@ log = logging.getLogger(__file__)
 class InrixSegment(Base):
     __tablename__ = 'traffic_inrix_segments'
 
-    vendor_id = Vendor.inrix
+    vendor_id = Vendor.inrix.name
 
     direction = Column(String)
     distance = Column(String)

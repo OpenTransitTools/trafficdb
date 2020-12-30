@@ -28,7 +28,6 @@ class TrafficSegmentSpeed(Base):
     fastest_speed = Column(Numeric(20, 10))
     all_speeds = Column(String(512))
 
-
     def __init__(self):
         super(TrafficSegmentSpeed, self).__init__()
 

@@ -30,12 +30,12 @@ class TrafficSegment(Base):
 
     stop_segment_id = Column(String(255), index=True, nullable=False)
     traffic_segment_id = Column(String(255), index=True, nullable=False)
-    vendor_id = Column(Enum(Vendor), nullable=False, default=Vendor.inrix)
+    vendor_id = Column(String(255), nullable=False, default=Vendor.inrix.name)
 
     lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
     distance = Column(Numeric(20, 10), nullable=False, default=0.0)
     direction = Column(String(2))
-    street_type = Column(Enum(StreetType), nullable=False, default=StreetType.arterial)
+    street_type = Column(String(255), nullable=False, default=StreetType.arterial.name)
 
     stop_segment = relationship(
         'StopSegment',
@@ -54,7 +54,7 @@ class TrafficSegment(Base):
         super(TrafficSegment, self).__init__()
         self.stop_segment_id = stop_segment.id
         self.traffic_segment_id = traffic_segment.id
-        self.vendor_id = traffic_segment.vendor_id
+        #self.vendor_id = traffic_segment.vendor_id
         self.geom = traffic_segment.geom
 
     @classmethod
@@ -73,6 +73,10 @@ class TrafficSegment(Base):
         ts.street_type = StreetType.get_name(traffic_segment.frc)
 
         return ts
+
+    @classmethod
+    def get_bbox(cls, session, buffer=0.0):
+        segs = session.query(TrafficSegment)
 
     @classmethod
     def get_segment_ids(cls, session, limit=None):
