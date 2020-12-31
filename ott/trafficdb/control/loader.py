@@ -1,11 +1,10 @@
-
-
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
 from ott.trafficdb.model.traffic_segment import TrafficSegment
 from ott.trafficdb.view.geojson import stop_geojson, local_server
 from ott.trafficdb.control.inrix.segment_data import load as inrix_segment_loader
 from ott.trafficdb.control.conflate.match_segments import match_traffic_to_stop_segments
+from ott.trafficdb.control.speeds_to_segments import speeds_via_bbox
 
 from gtfsdb.scripts import get_args
 import logging
@@ -73,13 +72,18 @@ def load_all():
         segments = match_traffic_to_stop_segments(session, InrixSegment)
         if segments:
             TrafficSegment.clear_tables(session)
-            Database.persist_data(segments)
+            Database.persist_data(session, segments)
 
-    q = TrafficSegment.bbox(session, 0.001, normalize=True)
-    print(q)
+    # step 5: grab initial set of speed data an put it into the database
+    # note: subsequent calls to 'bin/load_speed_data' can now be used to populate the db with new traffic data
+    bbox = TrafficSegment.bbox(session, 0.001, normalize=True)
+    speed_data = speeds_via_bbox(bbox)
+    Database.persist_data(session, speed_data)
 
+    # step 6: show some data...
+    TrafficSegment.print_all(session, just_speeds=True)
 
-    # step 5: load stop segments
+    # step 7: load stop segments and launch simple web server to host map
     stop_geojson(session)
     #local_server()
 

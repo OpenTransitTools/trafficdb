@@ -22,7 +22,7 @@ class _Base(object):
     def parse_record(cls, session, record, timestamp):
         raise NotImplementedError("Please implement this method")
 
-    ## TODO: all of this below is boiler plate from gtfsdb_realtime ... so let's add it to ott.utils
+    ## TODO: a lot of methods below are boiler plate from gtfsdb_realtime ... maybe add to ott.utils
 
     @classmethod
     def clear_tables(cls, session):
@@ -86,6 +86,18 @@ class _Base(object):
         }
 
     @classmethod
+    def bulk_load(cls, engine, records, remove_old=True):
+        """
+        load a bunch of records at once from a list (first clearing out the table).
+        note that the records array has to be dict structures, ala
+        http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Connection.execute
+        """
+        table = cls.__table__
+        if remove_old:
+            engine.execute(table.delete())
+        engine.execute(table.insert(), records)
+
+    @classmethod
     def from_dict(cls, attrs):
         clean_dict = cls.make_record(attrs)
         c = cls(**clean_dict)
@@ -146,18 +158,6 @@ class _Base(object):
         return geojson
 
     @classmethod
-    def bulk_load(cls, engine, records, remove_old=True):
-        """
-        load a bunch of records at once from a list (first clearing out the table).
-        note that the records array has to be dict structures, ala
-        http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Connection.execute
-        """
-        table = cls.__table__
-        if remove_old:
-            engine.execute(table.delete())
-        engine.execute(table.insert(), records)
-
-    @classmethod
     def bbox(cls, session, buffer=0.0000000001, normalize=False):
         ret_val = None
         try:
@@ -167,6 +167,14 @@ class _Base(object):
         except:
             log.warning("bbox no go on this geom")
         return ret_val
+
+    @classmethod
+    def print_all(cls, session):
+        for o in session.query(cls).all():
+            o.print()
+
+    def print(self):
+        print(self.__dict__)
 
 
 Base = declarative_base(cls=_Base)

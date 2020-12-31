@@ -3,6 +3,7 @@ import datetime
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Numeric, Enum
 from ott.trafficdb.model.base import Base
 from ott.utils import num_utils
+from ott.utils.object_utils import safe_get
 
 import logging
 log = logging.getLogger(__file__)
@@ -44,16 +45,18 @@ class TrafficSegmentSpeed(Base):
           'speedBucket': 3,
         }
         """
+        # TODO - move to inrix code someplace, ala control.inrix.speed_data ???
+        # TODO - pro move: scalable to other vendors, maybe cleaner; cons: separates the list of class props from assignment below
         # import pdb; pdb.set_trace()
         tss = TrafficSegmentSpeed()
         tss.traffic_segment_id = rec['code']
-        tss.average_speed = rec['average']
-        tss.freeflow_speed = rec['reference']
-        tss.current_speed = rec['speed']
+        tss.average_speed = safe_get(rec, 'average', 0.0)
+        tss.freeflow_speed = safe_get(rec, 'reference', 0.0)
+        tss.current_speed = safe_get(rec, 'speed', 0.0)
         # loop thru subSegments to collect all speeds tss.all_speeds = rec['']
-        tss.travel_time = rec['travelTimeMinutes']
+        tss.travel_time = safe_get(rec, 'travelTimeMinutes', 0.0)
 
-        if rec['score'] == 30:
+        if safe_get(rec, 'score', 0) == 30:
             tss.is_realtime = True
             if 'c-Value' in rec:
                 tss.rt_confidence = rec['c-Value']
