@@ -20,12 +20,13 @@ Integrated Mobility Innovation (IMI) program -- see https://trimet.org/imi/about
     - vendorid = ___ consumerid = ___
     - note: if you don't do this, you won't see any speed data 
  - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
+ - bin/load_speed_data -s test -d postgres://ott@localhost:5432/ott # note: run this every N minutes to get up-to-date speed data into the database 
  
 ### Manual Install (real data load):
 ##### if the above load_all worked well, then the next step will be to load a full dataset
  - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/
    - for the example below, using TriMet's latest GTFS file, you should download and unzip the USA_Oregon_geojson.zip file 
- - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott -t USA_Oregon.geojson https://developer.trimet.org/schedule/gtfs.zip
+ - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott https://developer.trimet.org/schedule/gtfs.zip -t USA_Oregon.geojson
 
 ### Individual Processes: CLEANUP TODO
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 

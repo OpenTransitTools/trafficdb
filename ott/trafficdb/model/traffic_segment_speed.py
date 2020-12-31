@@ -2,8 +2,7 @@ import enum
 import datetime
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Numeric, Enum
 from ott.trafficdb.model.base import Base
-from ott.utils import num_utils
-from ott.utils.object_utils import safe_get
+from ott.utils import num_utils, object_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -49,28 +48,27 @@ class TrafficSegmentSpeed(Base):
         # TODO - pro move: scalable to other vendors, maybe cleaner; cons: separates the list of class props from assignment below
         # import pdb; pdb.set_trace()
         tss = TrafficSegmentSpeed()
-        tss.traffic_segment_id = rec['code']
-        tss.average_speed = safe_get(rec, 'average', 0.0)
-        tss.freeflow_speed = safe_get(rec, 'reference', 0.0)
-        tss.current_speed = safe_get(rec, 'speed', 0.0)
-        # loop thru subSegments to collect all speeds tss.all_speeds = rec['']
-        tss.travel_time = safe_get(rec, 'travelTimeMinutes', 0.0)
+        tss.traffic_segment_id = object_utils.safe_get_str(rec, 'code', 'BOGUS')
+        tss.average_speed = object_utils.safe_get_float(rec, 'average')
+        tss.freeflow_speed = object_utils.safe_get_float(rec, 'reference')
+        tss.current_speed = object_utils.safe_get_float(rec, 'speed', 0.000111)
+        tss.travel_time = object_utils.safe_get_float(rec, 'travelTimeMinutes')
 
-        if safe_get(rec, 'score', 0) == 30:
+        if object_utils.safe_get_int(rec, 'score') == 30:
             tss.is_realtime = True
-            if 'c-Value' in rec:
-                tss.rt_confidence = rec['c-Value']
+            tss.rt_confidence = object_utils.safe_get_int(rec, 'c-Value')
         else:
             tss.is_realtime = False
 
-        if 'subSegments' in rec:
-            tss.slowest_speed = tss.fastest_speed = rec['speed']
-            tss.all_speeds = "{}".format(rec['speed'])
+        if object_utils.is_list(rec, 'subSegments'):
+            tss.slowest_speed = tss.fastest_speed = tss.current_speed
+            tss.all_speeds = "{}".format(tss.current_speed)
             for sub in rec['subSegments']:
-                tss.all_speeds += ":{}".format(sub['speed'])
-                if sub['speed'] < tss.slowest_speed:
-                    tss.slowest_speed = sub['speed']
-                if sub['speed'] > tss.fastest_speed:
-                    tss.fastest_speed = sub['speed']
+                sub_speed = object_utils.safe_get_float(sub, 'speed')
+                tss.all_speeds += ":{}".format(sub_speed)
+                if sub_speed < tss.slowest_speed:
+                    tss.slowest_speed = sub_speed
+                if sub_speed > tss.fastest_speed:
+                    tss.fastest_speed = sub_speed
 
         return tss

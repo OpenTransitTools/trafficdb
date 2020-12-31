@@ -6,10 +6,15 @@ from ott.trafficdb.control.inrix.segment_data import load as inrix_segment_loade
 from ott.trafficdb.control.conflate.match_segments import match_traffic_to_stop_segments
 from ott.trafficdb.control.speeds_to_segments import speeds_via_bbox
 
-from gtfsdb.scripts import get_args
+from gtfsdb.scripts import get_args, make_kwargs
 import logging
 log = logging.getLogger(__file__)
-args, kwargs = get_args()
+
+# customize the cmdline parser with room for traffic segments .geojson file
+parser, kwargs = get_args(do_parse=False)
+parser.add_argument('--transit_segments', '-t', default=None, nargs='*', help="transit segment file(s)")
+args = parser.parse_args()
+kwargs = make_kwargs(args)
 
 
 def load_gtfsdb(session=None):
@@ -44,9 +49,8 @@ def load_all():
     - step 1: load gtfs data ... calculate all stop-to-stop segments in the data
     - step 2: load traffic vendor street / segment data (INRIX in this case)
     - step 3: match/conflate stop-segments with traffic segment data
-       - bin/match_segments
      - step 4: load speed data from INRIX into db (on-going ... run every 5 mintutes?)
-       - bin/load_speed_data
+       - bin/load_speed_data should be run after the initial db load
      - step 5: plot lastest segment / speed data on the example map
        - bin/generate-speed-geojson --show-map
 
@@ -55,7 +59,8 @@ def load_all():
     """
 
     # step 1: create db session for the traffic tables
-    session = Database.make_session(args.database_url, args.schema, args.is_geospatial, args.create)
+    create_new_db = args.create and args.file not in "skippp"  # if skipping load steps (below), don't blow away old db
+    session = Database.make_session(args.database_url, args.schema, args.is_geospatial, create_new_db)
 
     # step 2: load gtfsdb + calculate all stop-to-stop segments in the data
     if args.file not in "skippp":
@@ -63,7 +68,7 @@ def load_all():
 
     # step 3: load traffic vendor's street / segment data
     if args.file not in "skipp":
-        inrix_segment_loader(schema=args.schema)
+        inrix_segment_loader(files=args.transit_segments, schema=args.schema)
 
     # step 4: conflate traffic vendor data with transit (stop segment) data from above
     if args.file not in "skip":
