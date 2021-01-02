@@ -26,7 +26,24 @@ Integrated Mobility Innovation (IMI) program -- see https://trimet.org/imi/about
 ##### if the above load_all worked well, then the next step will be to load a full dataset
  - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/
    - for the example below, using TriMet's latest GTFS file, you should download and unzip the USA_Oregon_geojson.zip file 
- - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott https://developer.trimet.org/schedule/gtfs.zip -t USA_Oregon.geojson
+
+https://developer.trimet.org/GTFS.shtml
+bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott https://developer.trimet.org/schedule/gtfs.zip -t USA_Oregon.geojson
+bin/load_speed_data -s trimet
+
+https://www.c-tran.com/about-c-tran/business/c-tran-gtfs-data
+bin/load_all -c -g -s ctran -d postgres://ott@localhost:5432/ott https://www.c-tran.com/images/Google/GoogleTransitUpload.zip -t USA_Washington.geojson USA_Oregon.geojson
+bin/load_speed_data -s ctran
+
+http://www.actransit.org/planning-focus/data-resource-center/
+bin/load_all -c -g -s actransit -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent -t USA_CA_BayArea.geojson 
+bin/load_speed_data -s actransit
+
+https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
+note: problem with gtfsdb's GET and RTD's web server means that you probably need to download gtfs file locally and change the https: below to the file path of the downloaded .zip file  
+bin/load_all -c -g -s rtd -d postgres://ott@localhost:5432/ott https://www.rtd-denver.com/files/gtfs/google_transit.zip -t USA_Colorado.geojson
+bin/load_speed_data -s rtd
+
 
 ### Individual Processes: CLEANUP TODO
  - step 1: load gtfs data ... calculate all stop-to-stop segments in the data 

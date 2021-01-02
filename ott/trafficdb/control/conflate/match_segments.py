@@ -90,9 +90,7 @@ def main(cmd_name="bin/match-segments"):
     if segments:
         session = Database.make_session(url, schema, is_geospatial)
         TrafficSegment.clear_tables(session)
-        session.add_all(segments)
-        session.commit()
-        session.flush()
+        Database.persist_data(segments)
 
 
 if __name__ == '__main__':
