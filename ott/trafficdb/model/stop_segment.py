@@ -190,7 +190,7 @@ class StopSegment(Base, PatternBase):
           ]
         }
         """
-        feature_tmpl = '{{"type": "Feature", "properties": {{' \
+        feature_tmpl = '    {{"type": "Feature", "properties": {{' \
                        '"id": "{}", ' \
                        '"info": "{}", ' \
                        '"layer": "{}" ' \
@@ -218,5 +218,5 @@ class StopSegment(Base, PatternBase):
             featgeo += feature_tmpl.format(f.end_stop_id, "", "stop", stop_cache[f.end_stop_id], comma)
             last_stop = f.end_stop_id
 
-        geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n  {}  ]\n}}'.format(featgeo)
+        geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n{}  ]\n}}'.format(featgeo)
         return geojson
