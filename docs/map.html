@@ -141,7 +141,24 @@
       });
 
       map.addLayer({
-        'id': 'segments',
+        'id': 'traffic_segments',
+        'type': 'line',
+        'source': 'segments',
+        'layout': {
+          'visibility': 'visible',
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-opacity': 0.4,
+          'line-color': '#1b8dff',
+          'line-width': 8
+        },
+        'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'traffic']]
+      });
+
+      map.addLayer({
+        'id': 'stop_segments',
         'type': 'line',
         'source': 'segments',
         'layout': {
@@ -154,7 +171,7 @@
           'line-color': '#ece90d',
           'line-width': 4
         },
-        'filter': ['==', '$type', 'LineString']
+        'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'stop']]
       });
 
       map.addLayer({
@@ -256,7 +273,7 @@
           [e.point.x - 5, e.point.y - 5],
           [e.point.x + 5, e.point.y + 5]
         ];
-        var features = map.queryRenderedFeatures(bbox, { layers: ['segments']});
+        var features = map.queryRenderedFeatures(bbox, { layers: ['stop_segments', 'traffic_segments']});
 
         //debugger;
         if(features && features.length > 0) {
@@ -321,7 +338,7 @@
       }
     }
 
-    makeMenu(['segments', 'stops']);
+    makeMenu(['stop_segments', 'traffic_segments', 'stops']);
   </script>
 </body>
 </html>
