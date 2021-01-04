@@ -25,7 +25,6 @@ def load_gtfsdb(session=None):
     """
     from gtfsdb.api import database_load
     database_load(args.file, **kwargs)
-    load_stop_segments(session)
 
 
 def load_stop_segments(session=None):
@@ -70,8 +69,10 @@ def load_all():
     if args.file not in "skipp":
         inrix_segment_loader(files=args.transit_segments, schema=args.schema)
 
-    # step 4: conflate traffic vendor data with transit (stop segment) data from above
+    # step 4: load stops, then conflate traffic vendor data with transit (stop segment) data from above
     if args.file not in "skip":
+        load_stop_segments(session)
+
         # import pdb; pdb.set_trace()
         from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
         segments = match_traffic_to_stop_segments(session, InrixSegment)
@@ -90,7 +91,7 @@ def load_all():
 
     # step 7: load stop segments and launch simple web server to host map
     stop_geojson(session)
-    #local_server()
+    local_server()
 
 
 def main():

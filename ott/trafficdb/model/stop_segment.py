@@ -4,6 +4,7 @@ from gtfsdb import Stop, Trip, Shape, PatternBase
 
 from ott.trafficdb.model.base import Base
 from ott.utils import geo_utils
+from ott.utils import object_utils
 
 import logging
 log = logging.getLogger(__file__)
@@ -70,19 +71,26 @@ class StopSegment(Base, PatternBase):
         self.id = id
         self.begin_stop_id = begin_stop.stop_id
         self.end_stop_id = end_stop.stop_id
+        self.shape_id = trip.shape_id
         self.begin_time = begin_stop.arrival_time
         self.end_time = end_stop.departure_time
-        self.distance = end_stop.shape_dist_traveled - begin_stop.shape_dist_traveled
-        self.shape_id = trip.shape_id
-        self.begin_distance = begin_stop.shape_dist_traveled
-        self.end_distance = end_stop.shape_dist_traveled
+
+        bsd = object_utils.safe_float(begin_stop.shape_dist_traveled)
+        esd = object_utils.safe_float(end_stop.shape_dist_traveled)
+        self.distance = esd - bsd
+        self.begin_distance = esd
+        self.end_distance = bsd
 
         self.bearing = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
         self.direction = geo_utils.compass(self.bearing)
 
         if hasattr(self, 'geom'):
-            q = self._make_shapes(session, begin_stop, end_stop, trip)
-            self.geom_from_shape(q)
+            try:
+                q = self._make_shapes(session, begin_stop, end_stop, trip)
+                self.geom_from_shape(q)
+            except:
+                #import pdb; pdb.set_trace()
+                log.warning("can't make geom for {}".format(id))
 
     @classmethod
     def _make_shapes(cls, session, begin_stop, end_stop, trip):
