@@ -93,8 +93,9 @@ class TrafficSegment(Base):
     def print_all(cls, session, limit=None, just_speeds=False):
         q = session.query(TrafficSegment).order_by(TrafficSegment.stop_segment_id)
         if limit and type(limit) is int:
-            q.limit(limit)
-        segments = q.all()
+            segments = q.limit(limit)
+        else:
+            segments = q.all()
 
         for s in segments:
             if just_speeds and (s.speeds is None or len(s.speeds) < 1):
@@ -103,17 +104,11 @@ class TrafficSegment(Base):
 
     def print(self, latest_speed_filter=False):
         # import pdb; pdb.set_trace()
-        out = "\nsegments: {} ({} {}) -- {} ({} {}):\n". \
-            format(
-                self.stop_segment_id, self.stop_segment.direction, self.stop_segment.distance,
-                self.traffic_segment_id, self.direction, self.distance
-            )
+        out = "\nsegments: {s.stop_segment_id} ({s.stop_segment.direction} {s.stop_segment.distance:5.1f}') -- " \
+              "{s.traffic_segment_id} ({s.direction} {s.distance:5.1f}'):\n".format(s = self)
 
         if self.speeds and len(self.speeds) > 0:
-            # TODO: sort speeds / only show latest speed if filter says so...
-            for s in self.speeds:  # only show latest sort by capture time
-                out += "   speed:{}  free:{}  avg:{}  time:{} (realtime = {} @ {}%) \n".format(
-                    s.current_speed, s.freeflow_speed, s.average_speed, s.travel_time,
-                    s.is_realtime, s.rt_confidence
-                )
+            for s in self.speeds:  # TODO: (maybe / optionally) only show latest and/or sort by capture time
+                out += " {}\n".format(s.print(do_print=False))
+
         print(out)
