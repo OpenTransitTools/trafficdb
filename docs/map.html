@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stop Segments - TriMet</title>
+  <title>Stop Segments</title>
   <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox-gl.css" />
   <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox.css" />
   <script src="https://tiles.trimet.org/mapbox-gl.js"></script>
@@ -124,6 +124,32 @@
       customAttribution: 'Powered bi Frank OpenTransitTools'
     });
 
+    function getUrlParam(name, defVal) {
+      var retVal;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        retVal = params.get(name);
+        if(retVal === null)
+          retVal = defVal;
+        document.title = document.title + " - " + retVal;
+      } catch (e) {
+        retVal = defVal;
+      }
+      return retVal;
+    }
+
+    function setMapToLayerBbox(geojson) {
+      // Geographic coordinates of the LineString
+      var coordinates = geojson.features[0].geometry.coordinates;
+      var bounds = coordinates.reduce(function (bounds, coord) {
+        return bounds.extend(coord);
+      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+      map.fitBounds(bounds, {
+        padding: 200
+      });
+    }
+
     map.addControl(nav);
     map.addControl(scale);
     map.addControl(pelias);
@@ -132,10 +158,10 @@
     map.addControl(geo,  'bottom-right');
 
     map.on('load', function () {
-
+      var segmentsGeojson = getUrlParam('segments', 'ctran.geojson');
       map.addSource('segments', {
         type: 'geojson',
-        data: 'segments.geojson',
+        data: segmentsGeojson,
         buffer: 0,
         maxzoom: 20
       });
@@ -155,7 +181,9 @@
           'line-width': 8
         },
         'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'traffic']]
-      });
+      }, 'road_major_label');
+      // 'road_major_label' is in the base layer style .. put here renders that above this layer
+      // it will also render other things above that style (like place_label_city, etc...) above
 
       map.addLayer({
         'id': 'stop_segments',
@@ -172,7 +200,7 @@
           'line-width': 4
         },
         'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'stop']]
-      });
+      }, 'road_major_label');
 
       map.addLayer({
         'id': 'stops',
@@ -186,7 +214,7 @@
           'circle-radius': { stops: [[8, 0.5], [11, 3], [16, 6]] }
         },
         'filter': ['==', '$type', 'Point']
-      });
+      }, 'road_major_label');
 
       map.addLayer({
         'id': 'segments-highlighted',
@@ -339,6 +367,16 @@
     }
 
     makeMenu(['stop_segments', 'traffic_segments', 'stops']);
+
+    /** hacky zoom to layer */
+    setTimeout(() => {
+      var features = map.querySourceFeatures('segments', { 'filter': ['==', '$type', 'Point']} );
+      var coordinates = features[0].geometry.coordinates;
+      map.setCenter(coordinates);
+      //var bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[1]);
+      //map.fitBounds(bounds, { padding: 200 });
+    }, 2000);
+
   </script>
 </body>
 </html>
