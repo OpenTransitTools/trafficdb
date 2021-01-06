@@ -138,18 +138,6 @@
       return retVal;
     }
 
-    function setMapToLayerBbox(geojson) {
-      // Geographic coordinates of the LineString
-      var coordinates = geojson.features[0].geometry.coordinates;
-      var bounds = coordinates.reduce(function (bounds, coord) {
-        return bounds.extend(coord);
-      }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-
-      map.fitBounds(bounds, {
-        padding: 200
-      });
-    }
-
     map.addControl(nav);
     map.addControl(scale);
     map.addControl(pelias);
@@ -158,7 +146,7 @@
     map.addControl(geo,  'bottom-right');
 
     map.on('load', function () {
-      var segmentsGeojson = getUrlParam('segments', 'ctran.geojson');
+      var segmentsGeojson = getUrlParam('segments', 'trimet.geojson');
       map.addSource('segments', {
         type: 'geojson',
         data: segmentsGeojson,
@@ -375,7 +363,7 @@
       map.setCenter(coordinates);
       //var bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[1]);
       //map.fitBounds(bounds, { padding: 200 });
-    }, 2000);
+    }, 3000);
 
   </script>
 </body>

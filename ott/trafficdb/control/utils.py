@@ -17,9 +17,11 @@ def make_db_url_schema(config=None, args=None, cmd_name='bin/blah', section="db"
     return url, schema
 
 
-def make_session(cmd_name="bin/blah"):
+def make_session(cmd_name="bin/blah", return_schema=False):
     config, args = make_args_config(cmd_name)
     url, schema = make_db_url_schema(config, args)
     is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
     session = Database.make_session(url, schema, is_geospatial)
+    if return_schema:
+        return session, schema
     return session

@@ -90,7 +90,7 @@ def load_all():
     TrafficSegment.print_all(session, just_speeds=True)
 
     # step 7: load stop segments and launch simple web server to host map
-    stop_geojson(session)
+    stop_geojson(session, args.schema)
     local_server()
 
 
