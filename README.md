@@ -1,28 +1,35 @@
 trafficdb
 ====
-The Traffic Database aims to bring GTFS, OSM and Traffic (Speed) data together. This project grew out of the US-FTA's 
-Integrated Mobility Innovation (IMI) program -- see https://trimet.org/imi/about.htm
+The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OSM](https://www.openstreetmap.org/) and Traffic (Speed) data together. This project grew out of the US-FTA's 
+[Integrated Mobility Innovation (IMI)](https://trimet.org/imi/about.htm) program. 
 
-#### Example map: https://opentransittools.github.io/trafficdb/#13.83/45.51357/-122.66579/0/20
+
+#### Example stop & traffic maps: 
+- [TriMet (Portland, OR)](https://opentransittools.github.io/trafficdb/#11.0/45.51357/-122.66579/0/20) stop & traffic map
+- [C-Tran (Vancouver, WA)](https://opentransittools.github.io/trafficdb?segments=ctran.geojson#11.0/45.582/-122.426/0/20) stop & traffic map 
+- [ACTransit (Oakland, CA)](https://opentransittools.github.io/trafficdb?segments=actransit.geojson#11.0/37.6722/-122.0564/0/20) stop & traffic map 
+- [RTD (Denver, CO)]() TBD
+
 
 ## Two options to install and run trafficdb (eventually) are either Docker Install or Manual Install
 
 ### Docker Install: todo
 
 ### Manual Install (step 1: mock data load):
- - install: git, postgres, psql, postgis, ogr2ogr, python 3.x, zc.buildout
- - git clone https://github.com/OpenTransitTools/trafficdb.git
- - cd trafficdb
- - buildout
- - scripts/create_db.sh
- - add your inrix creds to config/base.ini
+- _prerequisite install_: git, postgres, psql, postgis, ogr2ogr, python 3.x, zc.buildout
+- Clone the trafficdb repo: `git clone https://github.com/OpenTransitTools/trafficdb.git`
+- `cd trafficdb`
+- run the `scripts/create_db.sh` shell script
+- run [buildout](https://pypi.org/project/zc.buildout/) to pull in python dependencies
+- add your _INRIX credentials_ to config/base.ini
    - [inrix] 
-    - vendorid = ___ consumerid = ___
+    - vendorid = ___ 
+    - consumerid = ___
     - note: if you don't do this, you won't see any speed data 
- - bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip
- - bin/load_speed_data -s test -d postgres://ott@localhost:5432/ott # note: run this every N minutes to get up-to-date speed data into the database 
+- run `bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip`
+- run `bin/load_speed_data -s test -d postgres://ott@localhost:5432/ott`  # note: run this every N minutes to get up-to-date speed data into the database  
  
-### Manual Install (real data load):
+### Manual Install (real transit data load):
 ##### if the above load_all worked well, then the next step will be to load a full dataset
  - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/
    - for the example below, using TriMet's latest GTFS file, you should download and unzip the USA_Oregon_geojson.zip file 
