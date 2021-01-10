@@ -3,9 +3,11 @@ from geoalchemy2 import func
 
 from ott.utils import string_utils
 
+from gtfsdb import Shape
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
 from ott.trafficdb.model.traffic_segment import TrafficSegment
+from ott.trafficdb.control.utils import make_session
 
 import logging
 log = logging.getLogger(__file__)
@@ -19,20 +21,58 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
 
     try:
         # step 1: find intersections and some buffer of the two geoms
-        # import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         a = StopSegment
         b = traffic_segments_cls
-        segments = session.query(
-            a, b
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
-        ).filter(
-            and_(
-              func.ST_Intersects(a.geom, b.geom)
-              #, or_(a.id.like('%844'), a.id.like('843%'))
+
+        segments = []
+        for s in session.query(StopSegment.shape_id).distinct():
+            shape_id = s[0]
+
+            ''''''
+            start_spd = session.query(Shape.shape_pt_sequence).filter(
+                and_(
+                    a.shape_id == shape_id,
+                    Shape.shape_id == a.shape_id,
+                    func.ST_Equals(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)), Shape.geom)
+                )
+            ).subquery()
+
+            end_spd = session.query(Shape.shape_pt_sequence).filter(
+                and_(
+                    a.shape_id == shape_id,
+                    Shape.shape_id == a.shape_id,
+                    func.ST_Equals(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)), Shape.geom)
+                )
+            ).subquery()
+            ''''''
+
+            segments += session.query(
+                a, b
+                , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
+                , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
+                , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
+                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
+                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
+                #, start_spd
+                #, end_spd
+            ).filter(
+                and_(
+                  a.shape_id == shape_id,
+                  func.ST_DWithin(a.geom, b.geom, 0.001)
+                  #, or_(a.id.like('%844'), a.id.like('843%'))
+                )
             )
-        )#.limit(20)
+
+            x = False
+            # import pdb; pdb.set_trace()
+            if x:
+              break
+
+        import pdb; pdb.set_trace()
+
 
         def is_match(res):
             is_match = False
@@ -75,20 +115,13 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
     return ret_val
 
 
-def main(cmd_name="bin/match-segments"):
+def main(cmd_name="bin/match_segments"):
     """ simple demo """
-    from ott.trafficdb.loader import make_args_config, make_db_url_schema
-
-    config, args = make_args_config(cmd_name)
-    url, schema = make_db_url_schema(config, args)
-    is_geospatial = string_utils.get_val(args.schema, config.get('is_geospatial'))
-    session = Database.make_session(url, schema, is_geospatial)
-
     from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
+    session = make_session(cmd_name)
     segments = match_traffic_to_stop_segments(session, InrixSegment)
 
     if segments:
-        session = Database.make_session(url, schema, is_geospatial)
         TrafficSegment.clear_tables(session)
         Database.persist_data(segments)
 
