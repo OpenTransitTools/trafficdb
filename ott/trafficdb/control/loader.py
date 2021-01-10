@@ -69,10 +69,12 @@ def load_all():
     if args.file not in "skipp":
         inrix_segment_loader(files=args.transit_segments, schema=args.schema)
 
-    # step 4: load stops, then conflate traffic vendor data with transit (stop segment) data from above
+    # step 4: create stop segments
     if args.file not in "skip":
         load_stop_segments(session)
 
+    # step 5: conflate traffic vendor data with transit (stop segment) data from above
+    if args.file not in "ski":
         # import pdb; pdb.set_trace()
         from ott.trafficdb.model.inrix.inrix_segment import InrixSegment
         segments = match_traffic_to_stop_segments(session, InrixSegment)

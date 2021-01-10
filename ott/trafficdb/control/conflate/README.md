@@ -3,8 +3,58 @@ CONFLATE GTFS (Stop Segments) to LINE data (OSM, INRIX, etc...):
 
 Anything here?  https://github.com/mapsme/osm_conflate/tree/master/conflate
 
-12/20/2020:
+
+1/3/2020:
 ===========
+-- select count(distinct shape_id) from trimet.traffic_stop_segment_trips
+--DROP TABLE ctran.traffic_stop_segments_t;
+--CREATE TABLE ctran.traffic_stop_segments_t AS SELECT * FROM ctran.traffic_stop_segments;
+--ALTER TABLE ctran.traffic_stop_segments_t ALTER COLUMN geom TYPE GEOMETRY(POLYGON, 4326) USING ST_Buffer(geom, 0.001);
+--CREATE INDEX idx_traffic_stop_segments_t_geom ON ctran.traffic_stop_segments_t USING gist (geom);
+
+SELECT --count(*)
+a.id, b.id, a.direction, b.direction
+---, ST_Contains(a.geom, b.geom) as a_cont_b_exact -- always false
+, ST_Contains(st_buffer(a.geom, 0.00001), b.geom) as a_cont_b_sm
+, ST_Contains(st_buffer(a.geom, 0.0001), b.geom) as a_cont_b_md
+, ST_Contains(st_buffer(a.geom, 0.001), b.geom) as a_cont_b_lg
+, (select c.shape_pt_sequence from test.shapes c where ST_Equals(ST_ClosestPoint(ST_Points(a.geom), st_startpoint(b.geom)), c.geom) and a.shape_id = c.shape_id limit 15) as start 
+, (select c.shape_pt_sequence from test.shapes c where ST_Equals(ST_ClosestPoint(ST_Points(a.geom), st_endpoint(b.geom)), c.geom) and a.shape_id = c.shape_id limit 15) as endd
+, ST_AsText(ST_ClosestPoint(ST_Points(a.geom), st_startpoint(b.geom))) as close_start
+, ST_AsText(ST_ClosestPoint(ST_Points(a.geom), st_endpoint(b.geom))) as close_end
+
+--, (select c.shape_pt_sequence from ctran.shapes c where ST_Equals(ST_ClosestPoint(c.geom, st_startpoint(b.geom)), c.geom) and a.shape_id = c.shape_id limit 1) as start 
+--, (select c.shape_pt_sequence from ctran.shapes c where ST_Equals(ST_ClosestPoint(c.geom, st_endpoint(b.geom)), c.geom) and a.shape_id = c.shape_id limit 1) as endd
+
+--, (select c.shape_id from ctran.shapes c where a.shape_id = c.shape_id and ST_ClosestPoint(st_startpoint(b.geom), c.ge
+om)) limit 1)
+--, ST_AsText(ST_ClosestPoint(ST_Points(a.geom), st_endpoint(b.geom)))
+--, (select ST_AsText(ST_ClosestPoint(c.geom, st_endpoint(b.geom))) from ctran.shapes c where a.shape_id = c.shape_id li
+mit 1)
+--, (select ST_AsText(ST_ClosestPoint(c.geom, st_endpoint(b.geom))) from ctran.shapes c where a.shape_id = c.shape_id li
+mit 1)
+--, ST_Distance(a.geom, st_endpoint(b.geom))
+--, (select ST_Distance(ST_ClosestPoint(c.geom, st_endpoint(b.geom)), st_endpoint(b.geom)) from ctran.shapes c where a.s
+hape_id = c.shape_id limit 1)
+--, (select ST_Distance(c.geom, st_endpoint(b.geom)) from ctran.shapes c where a.shape_id = c.shape_id limit 1)
+--, (select c.shape_pt_sequence from ctran.shapes c where a.shape_id = c.shape_id limit 1)
+, a.*
+, b.*
+FROM test.traffic_stop_segments a, test.traffic_inrix_segments b
+WHERE 
+--st_intersects(a.geom, b.geom)
+--st_intersects(st_buffer(a.geom, 0.001), b.geom)
+st_dwithin(a.geom, b.geom, 0.001)
+--and a.id = '2706-3242'
+--and a.shape_id = '5332'
+--and a.shape_id = '462934'
+--and start < end
+--and ST_Contains(st_buffer(a.geom, 0.0001), b.geom)
+--and start != NULL
+--and end != NULL
+--and start < endd
+order by start
+--limit 600
 
 
 
