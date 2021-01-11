@@ -65,13 +65,13 @@ def load_all():
     if args.file not in "skippp":
         load_gtfsdb(session)
 
-    # step 3: load traffic vendor's street / segment data
+    # step 3: create stop segments
     if args.file not in "skipp":
-        inrix_segment_loader(files=args.transit_segments, schema=args.schema)
-
-    # step 4: create stop segments
-    if args.file not in "skip":
         load_stop_segments(session)
+
+    # step 4: load traffic vendor's street / segment data
+    if args.file not in "skip":
+        inrix_segment_loader(files=args.transit_segments, schema=args.schema)
 
     # step 5: conflate traffic vendor data with transit (stop segment) data from above
     if args.file not in "ski":

@@ -28,14 +28,15 @@ class TrafficSegment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
 
+    vendor_id = Column(String(255), nullable=False, default=Vendor.inrix.name)
     stop_segment_id = Column(String(255), index=True, nullable=False)
     traffic_segment_id = Column(String(255), index=True, nullable=False)
-    vendor_id = Column(String(255), nullable=False, default=Vendor.inrix.name)
+    percent_of_stop_segment = Column(Integer, nullable=False, default=0)
 
     lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
     distance = Column(Numeric(20, 10), nullable=False, default=0.0)
-    direction = Column(String(2))
     street_type = Column(String(255), nullable=False, default=StreetType.arterial.name)
+    direction = Column(String(2))
 
     stop_segment = relationship(
         'StopSegment',

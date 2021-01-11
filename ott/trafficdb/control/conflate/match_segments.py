@@ -1,7 +1,7 @@
 from sqlalchemy import and_, or_
 from geoalchemy2 import func
 
-from ott.utils import string_utils
+from ott.utils import geo_utils
 
 from gtfsdb import Shape
 from ott.trafficdb.model.database import Database
@@ -13,6 +13,22 @@ import logging
 log = logging.getLogger(__file__)
 
 
+def group_results(rez):
+    """
+    will group the query results by the stop-segment id
+    :return: dictionary of various stop segments, and the query results
+    """
+    ret_val = {}
+    curr_i = 'ZZZ'
+    for r in rez:
+        ss = r[0]
+        if curr_i != ss.id:
+            curr_i = ss.id
+            ret_val[ss.id] = []
+        ret_val[ss.id].append(r)
+    return ret_val
+
+
 def match_traffic_to_stop_segments(session, traffic_segments_cls):
     """
     will find all traffic segments in the database that align up with
@@ -21,53 +37,64 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
 
     try:
         # step 1: find intersections and some buffer of the two geoms
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         a = StopSegment
         b = traffic_segments_cls
 
         segments = []
         for s in session.query(StopSegment.shape_id).distinct():
             shape_id = s[0]
+            shapes = session.query(Shape).filter(Shape.shape_id == shape_id).order_by(Shape.shape_pt_sequence).all()
 
-            ''''''
-            start_spd = session.query(Shape.shape_pt_sequence).filter(
-                and_(
-                    a.shape_id == shape_id,
-                    Shape.shape_id == a.shape_id,
-                    func.ST_Equals(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)), Shape.geom)
-                )
-            ).subquery()
-
-            end_spd = session.query(Shape.shape_pt_sequence).filter(
-                and_(
-                    a.shape_id == shape_id,
-                    Shape.shape_id == a.shape_id,
-                    func.ST_Equals(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)), Shape.geom)
-                )
-            ).subquery()
-            ''''''
-
-            segments += session.query(
+            rez = session.query(
                 a, b
+                , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)))
+                , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)))
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
+                , func.ST_Distance(func.ST_StartPoint(b.geom), a.geom)
+                , func.ST_Distance(func.ST_EndPoint(b.geom), a.geom)
+                , func.ST_HausdorffDistance(a.geom, b.geom)
+                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
+                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
                 , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
                 , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
                 , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
-                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
-                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
-                #, start_spd
-                #, end_spd
             ).filter(
                 and_(
                   a.shape_id == shape_id,
                   func.ST_DWithin(a.geom, b.geom, 0.001)
-                  #, or_(a.id.like('%844'), a.id.like('843%'))
                 )
-            )
+            ).order_by(a.id)
+
+            import pdb; pdb.set_trace()
+            qsegs = group_results(rez)
+            for k in qsegs.keys():
+                for g in qsegs[k]:
+                    a = g[0]
+
+                    # make sure the stop sequence coords nearest to the start & end of transit segment are different
+                    if g[2] == g[3]:
+                        continue
+
+                    x = Shape.get_sequence_from_dist(a.begin_distance, shapes)
+                    y = Shape.get_sequence_from_dist(a.end_distance, shapes)
+
+                    # will make sure the index of the nearest transit segments are in the right order
+                    slat, slon = geo_utils.ll_from_point_str(g[2])
+                    elat,elon = geo_utils.ll_from_point_str(g[3])
+                    st = Shape.get_sequence_from_coord(slat, slon, shapes[x-1:y])
+                    ed = Shape.get_sequence_from_coord(elat, elon, shapes[x-1:y])
+                    if st >= ed:
+                        continue
+
+                    m = "{} {}: {} to {} - {} {}".format(shape_id, a.id, x, y, st, ed)
+                    print(m)
+                    # import pdb; pdb.set_trace()
+
+            import pdb; pdb.set_trace()
 
             x = False
-            # import pdb; pdb.set_trace()
             if x:
               break
 
