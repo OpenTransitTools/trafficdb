@@ -46,6 +46,8 @@ http://www.actransit.org/planning-focus/data-resource-center/
 bin/load_all -c -g -s actransit -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent -t USA_CA_BayArea.geojson 
 bin/load_speed_data -s actransit
 
+
+
 https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
 note: problem with gtfsdb's GET and RTD's web server means that you probably need to download gtfs file locally and change the https: below to the file path of the downloaded .zip file  
 bin/load_all -c -g -s rtd -d postgres://ott@localhost:5432/ott https://www.rtd-denver.com/files/gtfs/google_transit.zip -t USA_Colorado.geojson

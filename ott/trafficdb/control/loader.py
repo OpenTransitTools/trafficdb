@@ -81,6 +81,7 @@ def load_all():
         if segments:
             TrafficSegment.clear_tables(session)
             Database.persist_data(session, segments)
+    return
 
     # step 5: grab initial set of speed data an put it into the database
     # note: subsequent calls to 'bin/load_speed_data' can now be used to populate the db with new traffic data

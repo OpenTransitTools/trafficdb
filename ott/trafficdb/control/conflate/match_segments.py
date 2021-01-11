@@ -6,7 +6,7 @@ from ott.utils import geo_utils
 from gtfsdb import Shape
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.stop_segment import StopSegment
-from ott.trafficdb.model.traffic_segment import TrafficSegment
+from ott.trafficdb.model.traffic_segment import TrafficSegment, StreetType
 from ott.trafficdb.control.utils import make_session
 
 import logging
@@ -50,11 +50,12 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
                 a, b
                 , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)))
                 , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)))
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
                 , func.ST_Distance(func.ST_StartPoint(b.geom), a.geom)
                 , func.ST_Distance(func.ST_EndPoint(b.geom), a.geom)
-                , func.ST_HausdorffDistance(a.geom, b.geom)
+                , func.ST_Distance(a.geom, b.geom)
+
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
+                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
                 , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
                 , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
                 , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
@@ -67,32 +68,38 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
                 )
             ).order_by(a.id)
 
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             qsegs = group_results(rez)
             for k in qsegs.keys():
                 for g in qsegs[k]:
-                    a = g[0]
-
                     # make sure the stop sequence coords nearest to the start & end of transit segment are different
                     if g[2] == g[3]:
                         continue
+
+                    a = g[0]
+                    b = g[1]
 
                     x = Shape.get_sequence_from_dist(a.begin_distance, shapes)
                     y = Shape.get_sequence_from_dist(a.end_distance, shapes)
 
                     # will make sure the index of the nearest transit segments are in the right order
                     slat, slon = geo_utils.ll_from_point_str(g[2])
-                    elat,elon = geo_utils.ll_from_point_str(g[3])
+                    elat, elon = geo_utils.ll_from_point_str(g[3])
                     st = Shape.get_sequence_from_coord(slat, slon, shapes[x-1:y])
                     ed = Shape.get_sequence_from_coord(elat, elon, shapes[x-1:y])
                     if st >= ed:
                         continue
 
-                    m = "{} {}: {} to {} - {} {}".format(shape_id, a.id, x, y, st, ed)
+                    st_dist = g[4]
+                    ed_dist = g[5]
+                    k_dist = g[6]
+                    m = "{} ({}) {} ({} {}): {} to {} - {} {} (sd: {:5.6f} ed: {:5.6f} k: {:5.6f})".format(
+                        a.id, a.direction, b.id, StreetType.get_name(b.frc), b.direction, x, y, st, ed, st_dist, ed_dist, k_dist
+                    )
                     print(m)
                     # import pdb; pdb.set_trace()
 
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
 
             x = False
             if x:
