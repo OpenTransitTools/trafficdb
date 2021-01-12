@@ -13,20 +13,153 @@ import logging
 log = logging.getLogger(__file__)
 
 
-def group_results(rez):
+class Conflate(object):
     """
-    will group the query results by the stop-segment id
-    :return: dictionary of various stop segments, and the query results
     """
-    ret_val = {}
-    curr_i = 'ZZZ'
-    for r in rez:
-        ss = r[0]
-        if curr_i != ss.id:
-            curr_i = ss.id
-            ret_val[ss.id] = []
-        ret_val[ss.id].append(r)
-    return ret_val
+    def __init__(self, session, traffic_class, stop_class=StopSegment):
+        self.session = session
+        self.stop_class = stop_class
+        self.traffic_class = traffic_class
+        self._shapes = []
+
+    @property
+    def shapes(self):
+        """ get shape.txt for the 'current_shape_id' (see query_segments for where that's stored) """
+        # import pdb; pdb.set_trace()
+        try:
+            if len(self._shapes) < 1 or self._shapes[0].shape_id != self._current_shape_id:
+                self._shapes = self.session.query(Shape).filter(Shape.shape_id == self._current_shape_id).\
+                    order_by(Shape.shape_pt_sequence).all()
+        except Exception as e:
+            log.warning(e)
+            pass
+        return self._shapes
+
+    def ordered_segments(self, shape_id):
+        """
+        will query all the traffic segments, match them to the stops, then sort based on shape pt sequence
+        """
+        ret_val = []
+        qsegs = self.query_segments(shape_id)
+        for k in qsegs.keys():
+            for g in qsegs[k]:
+                if self.closest_points_are_different(g):
+                    continue
+
+                m = self.rs_to_obj(g)
+                if not self.in_sequence(m):
+                    continue
+
+                ret_val.append(m)
+                #print(self.format_info(m))
+        # sort ret_val
+        return ret_val
+
+    def query_segments(self, shape_id):
+        self._current_shape_id = shape_id
+
+        a = self.stop_class
+        b = self.traffic_class
+        rez = self.session.query(
+            self.stop_class, self.traffic_class
+            , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)))
+            , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)))
+            , func.ST_Distance(func.ST_StartPoint(b.geom), a.geom)
+            , func.ST_Distance(func.ST_EndPoint(b.geom), a.geom)
+            , func.ST_Distance(a.geom, b.geom)
+
+            , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
+            , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
+            , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
+            , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
+            , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
+        ).filter(
+            and_(
+              a.shape_id == shape_id,
+              func.ST_DWithin(a.geom, b.geom, 0.001)
+            )
+        ).order_by(a.id)
+
+        qsegs = self.group_results(rez)
+        return qsegs
+
+    def rs_to_obj(self, rez):
+        """
+        takes a single result set, from the above query (e.g., rez param), and turns it into a 'usable' named dict
+        """
+        # import pdb; pdb.set_trace()
+        a = rez[0]
+        x = Shape.get_sequence_from_dist(a.begin_distance, self.shapes)
+        y = Shape.get_sequence_from_dist(a.end_distance, self.shapes)
+
+        # will make sure the index of the nearest transit segments are in the right order
+        slat, slon = geo_utils.ll_from_point_str(rez[2])
+        elat, elon = geo_utils.ll_from_point_str(rez[3])
+        st = Shape.get_sequence_from_coord(slat, slon, self.shapes[x - 1:y])
+        ed = Shape.get_sequence_from_coord(elat, elon, self.shapes[x - 1:y])
+
+        ret_val = {
+            'stop_segment': rez[0],
+            'traffic_segment': rez[1],
+            'street_type': StreetType.get_name(rez[1].frc),
+
+            # the range is the shape's pt. sequence of the stop_segment
+            'range_start': x,
+            'range_end': y,
+
+            # the start_sequence / end_sequence is the shape's nearest sequence pt(s) for traffic seg's start/end
+            'start_sequence': st,
+            'end_sequence': ed,
+
+            'start_distance': rez[4],
+            'end_distance': rez[5]
+        }
+        return ret_val
+
+    @classmethod
+    def format_info(cls, obj):
+        #import pdb; pdb.set_trace()
+        msg = "{stop_segment.id:<11} ({stop_segment.direction:^2}) " \
+            "{traffic_segment.id:>11} ({traffic_segment.direction} " \
+            "{street_type:^14}): {range_start:>3} to {range_end:>3} - {start_sequence:>3} {end_sequence:>3} " \
+            "(sd: {start_distance:5.6f} ed: {end_distance:5.6f}) ".format(**obj)
+        return msg
+
+    @classmethod
+    def in_sequence(cls, obj):
+        """
+        check the order of the start / end sequence
+        (e.g., a street (line) in the opposite direction with have shape sequence pts in the wrong order)
+        """
+        ret_val = obj['start_sequence'] < obj['end_sequence']
+        return ret_val
+
+    @classmethod
+    def closest_points_are_different(cls, rez):
+        """
+        make sure the stop sequence coords nearest to the start & end of transit segment are different
+        note: in the result set above (rez param), items 3 & 4 are the nearest points
+        """
+        ret_val = rez[2] == rez[3]
+        return ret_val
+
+    @classmethod
+    def group_results(cls, rez):
+        """
+        will group the query results by the stop-segment id
+        :return: dictionary of various stop segments, and the query results
+        """
+        ret_val = {}
+        curr_i = 'ZZZ'
+        for r in rez:
+            ss = r[0]
+            if curr_i != ss.id:
+                curr_i = ss.id
+                ret_val[ss.id] = []
+            ret_val[ss.id].append(r)
+        return ret_val
 
 
 def match_traffic_to_stop_segments(session, traffic_segments_cls):
@@ -38,69 +171,16 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
     try:
         # step 1: find intersections and some buffer of the two geoms
         # import pdb; pdb.set_trace()
-        a = StopSegment
-        b = traffic_segments_cls
+        cfl = Conflate(session, traffic_segments_cls)
 
         segments = []
         for s in session.query(StopSegment.shape_id).distinct():
             shape_id = s[0]
-            shapes = session.query(Shape).filter(Shape.shape_id == shape_id).order_by(Shape.shape_pt_sequence).all()
 
-            rez = session.query(
-                a, b
-                , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom)))
-                , func.ST_AsText(func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom)))
-                , func.ST_Distance(func.ST_StartPoint(b.geom), a.geom)
-                , func.ST_Distance(func.ST_EndPoint(b.geom), a.geom)
-                , func.ST_Distance(a.geom, b.geom)
-
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
-                , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
-                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
-                , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
-                , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
-                , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
-                , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
-            ).filter(
-                and_(
-                  a.shape_id == shape_id,
-                  func.ST_DWithin(a.geom, b.geom, 0.001)
-                )
-            ).order_by(a.id)
-
-            #import pdb; pdb.set_trace()
-            qsegs = group_results(rez)
-            for k in qsegs.keys():
-                for g in qsegs[k]:
-                    # make sure the stop sequence coords nearest to the start & end of transit segment are different
-                    if g[2] == g[3]:
-                        continue
-
-                    a = g[0]
-                    b = g[1]
-
-                    x = Shape.get_sequence_from_dist(a.begin_distance, shapes)
-                    y = Shape.get_sequence_from_dist(a.end_distance, shapes)
-
-                    # will make sure the index of the nearest transit segments are in the right order
-                    slat, slon = geo_utils.ll_from_point_str(g[2])
-                    elat, elon = geo_utils.ll_from_point_str(g[3])
-                    st = Shape.get_sequence_from_coord(slat, slon, shapes[x-1:y])
-                    ed = Shape.get_sequence_from_coord(elat, elon, shapes[x-1:y])
-                    if st >= ed:
-                        continue
-
-                    st_dist = g[4]
-                    ed_dist = g[5]
-                    k_dist = g[6]
-                    m = "{:<11} ({:^2}) {:>11} ({} {:^14}): {:>3} to {:>3} - {:>3} {:>3} (sd: {:5.6f} ed: {:5.6f} k: {:5.6f})".format(
-                        a.id, a.direction, b.id, b.direction, StreetType.get_name(b.frc), x, y, st, ed, st_dist, ed_dist, k_dist
-                    )
-                    print(m)
-                    # import pdb; pdb.set_trace()
-
-            #import pdb; pdb.set_trace()
-
+            segments = cfl.ordered_segments(shape_id)
+            for s in segments:
+                print(cfl.format_info(s))
+            import pdb; pdb.set_trace()
             x = False
             if x:
               break
