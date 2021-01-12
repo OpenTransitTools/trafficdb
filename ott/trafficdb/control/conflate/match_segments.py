@@ -93,8 +93,8 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
                     st_dist = g[4]
                     ed_dist = g[5]
                     k_dist = g[6]
-                    m = "{} ({}) {} ({} {}): {} to {} - {} {} (sd: {:5.6f} ed: {:5.6f} k: {:5.6f})".format(
-                        a.id, a.direction, b.id, StreetType.get_name(b.frc), b.direction, x, y, st, ed, st_dist, ed_dist, k_dist
+                    m = "{:<11} ({:^2}) {:>11} ({} {:^14}): {:>3} to {:>3} - {:>3} {:>3} (sd: {:5.6f} ed: {:5.6f} k: {:5.6f})".format(
+                        a.id, a.direction, b.id, b.direction, StreetType.get_name(b.frc), x, y, st, ed, st_dist, ed_dist, k_dist
                     )
                     print(m)
                     # import pdb; pdb.set_trace()

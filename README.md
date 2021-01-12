@@ -42,11 +42,13 @@ https://www.c-tran.com/about-c-tran/business/c-tran-gtfs-data
 bin/load_all -c -g -s ctran -d postgres://ott@localhost:5432/ott https://www.c-tran.com/images/Google/GoogleTransitUpload.zip -t USA_Washington.geojson USA_Oregon.geojson
 bin/load_speed_data -s ctran
 
+https://gtfs.vta.org/
+bin/load_all -c -g -s vta -d postgres://ott@localhost:5432/ott https://gtfs.vta.org/gtfs_vta.zip -t USA_CA_BayArea.geojson 
+bin/load_speed_data -s vta
+
 http://www.actransit.org/planning-focus/data-resource-center/
 bin/load_all -c -g -s actransit -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent -t USA_CA_BayArea.geojson 
 bin/load_speed_data -s actransit
-
-
 
 https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
 note: problem with gtfsdb's GET and RTD's web server means that you probably need to download gtfs file locally and change the https: below to the file path of the downloaded .zip file  
