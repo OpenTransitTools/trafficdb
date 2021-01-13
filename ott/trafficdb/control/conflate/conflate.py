@@ -9,6 +9,51 @@ from ott.trafficdb.model.traffic_segment import StreetType
 import logging
 log = logging.getLogger(__file__)
 
+
+class ConflatedSegment(object):
+    stop_segment = None
+    traffic_segment = None
+    street_type = None
+
+    # the range is the shape's pt. sequence of the stop_segment
+    range_start = -1
+    range_end = -1
+
+    # the start_sequence / end_sequence is the shape's nearest sequence pt(s) for traffic seg's start/end
+    start_sequence = -1
+    end_sequence = -1
+    start_distance = 111.111
+    end_distance = 111.111
+
+    def in_sequence(self):
+        """
+        check the order of the start / end sequence
+        (e.g., a street (line) in the opposite direction with have shape sequence pts in the wrong order)
+        """
+        ret_val = self.start_sequence < self.end_sequence
+        return ret_val
+
+    def overlap(self, obj):
+        ret_val = False
+        if self.start_sequence <= obj.end_sequence and obj.start_sequence <= self.end_sequence:
+            ret_val = True
+        return ret_val
+
+    def is_closer(self, obj):
+        ret_val = False
+        if self.start_distance <= self.start_distance and self.end_distance <= obj.end_distance:
+            ret_val = True
+        return ret_val
+
+    def format_info(self):
+        #import pdb; pdb.set_trace()
+        msg = "{s.stop_segment.id:<11} ({s.stop_segment.direction:^2}) " \
+          "{s.traffic_segment.id:>11} ({s.traffic_segment.direction} " \
+          "{s.street_type:^14}): {s.range_start:>3} to {s.range_end:>3} - {s.start_sequence:>3} {s.end_sequence:>3} " \
+          "(sd: {s.start_distance:5.6f} ed: {s.end_distance:5.6f}) ".format(s = self)
+        return msg
+
+
 class Conflate(object):
     """
     collection of routines for querying and filtering transit segments that match stop segment(s)
@@ -24,8 +69,9 @@ class Conflate(object):
         """ get list of Shape(s) for the 'current_shape_id' (see query_segments for where that's stored) """
         # import pdb; pdb.set_trace()
         try:
-            self._shapes = self.session.query(Shape).filter(Shape.shape_id == self._current_shape_id). \
-                order_by(Shape.shape_pt_sequence).all()
+            if not self._shapes or self._shapes[0].shape_id != self._current_shape_id:
+                self._shapes = self.session.query(Shape).filter(Shape.shape_id == self._current_shape_id). \
+                    order_by(Shape.shape_pt_sequence).all()
         except Exception as e:
             log.warning(e)
             pass
@@ -43,14 +89,6 @@ class Conflate(object):
             , func.ST_Distance(func.ST_StartPoint(b.geom), a.geom)
             , func.ST_Distance(func.ST_EndPoint(b.geom), a.geom)
             , func.ST_Distance(a.geom, b.geom)
-
-            , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
-            , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
-            , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
-            , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
-            , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
         ).filter(
             and_(
               a.shape_id == shape_id,
@@ -58,10 +96,20 @@ class Conflate(object):
             )
         ).order_by(a.id)
 
+        """
+        , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_StartPoint(b.geom))
+        , func.ST_ClosestPoint(func.ST_Points(a.geom), func.ST_EndPoint(b.geom))
+        , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_StartPoint(a.geom))
+        , func.ST_ClosestPoint(func.ST_Points(b.geom), func.ST_EndPoint(a.geom))
+        , func.ST_Contains(func.ST_Buffer(a.geom, 0.00001), b.geom)
+        , func.ST_Contains(func.ST_Buffer(a.geom, 0.0001), b.geom)
+        , func.ST_Contains(func.ST_Buffer(a.geom, 0.001), b.geom)
+        """
+
         qsegs = self.group_results(rez)
         return qsegs
 
-    def rs_to_obj(self, rez):
+    def segment_factory(self, rez):
         """
         takes a single result set, from the above query (e.g., rez param), and turns it into a 'usable' named dict
         """
@@ -76,23 +124,18 @@ class Conflate(object):
         st = Shape.get_sequence_from_coord(slat, slon, self.shapes[x - 1:y])
         ed = Shape.get_sequence_from_coord(elat, elon, self.shapes[x - 1:y])
 
-        ret_val = {
-            'stop_segment': rez[0],
-            'traffic_segment': rez[1],
-            'street_type': StreetType.get_name(rez[1].frc),
-
-            # the range is the shape's pt. sequence of the stop_segment
-            'range_start': x,
-            'range_end': y,
-
-            # the start_sequence / end_sequence is the shape's nearest sequence pt(s) for traffic seg's start/end
-            'start_sequence': st,
-            'end_sequence': ed,
-
-            'start_distance': rez[4],
-            'end_distance': rez[5]
-        }
-        return ret_val
+        # factory
+        cs = ConflatedSegment()
+        cs.stop_segment = rez[0]
+        cs.traffic_segment = rez[1]
+        cs.street_type = StreetType.get_name(rez[1].frc)
+        cs.range_start = x
+        cs.range_end = y
+        cs.start_sequence = st
+        cs.end_sequence = ed
+        cs.start_distance = rez[4]
+        cs.end_distance = rez[5]
+        return cs
 
     def ordered_segments(self, shape_id, do_sort=True):
         """
@@ -107,37 +150,19 @@ class Conflate(object):
                     continue
 
                 # parse the database result set into an dictionary
-                m = self.rs_to_obj(g)
+                s = self.segment_factory(g)
 
                 # filter 2: filter records if the start point is closer to a larger shp pt index than the end
                 # (e.g., the traffic line (street) is probably the opposite street direction from stop segment)
-                if not self.in_sequence(m):
+                if not s.in_sequence():
                     continue
 
-                ret_val.append(m)
+                ret_val.append(s)
 
         # sort the results
         if do_sort:
-            ret_val = sorted(ret_val, key = lambda i: (i['range_start'], i['start_sequence']))
+            ret_val = sorted(ret_val, key = lambda i: (i.range_start, i.start_sequence))
 
-        return ret_val
-
-    @classmethod
-    def format_info(cls, obj):
-        #import pdb; pdb.set_trace()
-        msg = "{stop_segment.id:<11} ({stop_segment.direction:^2}) " \
-            "{traffic_segment.id:>11} ({traffic_segment.direction} " \
-            "{street_type:^14}): {range_start:>3} to {range_end:>3} - {start_sequence:>3} {end_sequence:>3} " \
-            "(sd: {start_distance:5.6f} ed: {end_distance:5.6f}) ".format(**obj)
-        return msg
-
-    @classmethod
-    def in_sequence(cls, obj):
-        """
-        check the order of the start / end sequence
-        (e.g., a street (line) in the opposite direction with have shape sequence pts in the wrong order)
-        """
-        ret_val = obj['start_sequence'] < obj['end_sequence']
         return ret_val
 
     @classmethod

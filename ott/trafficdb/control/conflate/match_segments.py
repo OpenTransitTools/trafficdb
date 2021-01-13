@@ -8,6 +8,14 @@ import logging
 log = logging.getLogger(__file__)
 
 
+def filter_best_segments(segs):
+    ret_val = []
+    prev = segs
+    ret_val = prev
+
+    return ret_val
+
+
 def match_traffic_to_stop_segments(session, traffic_segments_cls):
     """
     will find all traffic segments in the database that align up with
@@ -21,9 +29,10 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
 
         segments = []
         for s in session.query(StopSegment.shape_id).distinct():
-            segments = cfl.ordered_segments(shape_id=s[0])
+            segments_all = cfl.ordered_segments(shape_id=s[0])
+            segments = filter_best_segments(segments)
             for s in segments:
-                #print(cfl.format_info(s))
+                print(s.format_info())
                 pass
             #import pdb; pdb.set_trace()
             x = False
@@ -31,6 +40,7 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
               break
 
         #import pdb; pdb.set_trace()
+        return
 
 
         def is_match(res):
