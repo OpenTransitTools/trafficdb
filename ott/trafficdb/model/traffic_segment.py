@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, String, Integer, Numeric, Enum
+from sqlalchemy import Column, String, Integer, Numeric
 from sqlalchemy.orm import deferred, relationship
 from geoalchemy2 import Geometry
 
@@ -28,14 +28,15 @@ class TrafficSegment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
 
+    vendor_id = Column(String(255), nullable=False, default=Vendor.inrix.name)
     stop_segment_id = Column(String(255), index=True, nullable=False)
     traffic_segment_id = Column(String(255), index=True, nullable=False)
-    vendor_id = Column(String(255), nullable=False, default=Vendor.inrix.name)
+    percent_of_stop_segment = Column(Numeric(6, 3), nullable=False, default=0.0)
 
-    lanes = Column(Numeric(20, 10), nullable=False, default=1.0)
+    lanes = Column(Numeric(6, 3), nullable=False, default=1.0)
     distance = Column(Numeric(20, 10), nullable=False, default=0.0)
-    direction = Column(String(2))
     street_type = Column(String(255), nullable=False, default=StreetType.arterial.name)
+    direction = Column(String(2))
 
     stop_segment = relationship(
         'StopSegment',
@@ -66,11 +67,14 @@ class TrafficSegment(Base):
         ts = TrafficSegment(stop_segment, traffic_segment)
 
         # custom inrix parsing
+        # import pdb; pdb.set_trace()
         # TODO: Gtfs might be in different units ... here we're converting to feet (since I think that's what TM's gtfs is)
         ts.distance = num_utils.to_float(traffic_segment.distance, 0.0) * 5280
         ts.direction = traffic_segment.direction
         ts.lanes = num_utils.to_float(traffic_segment.lanes, 0.0)
         ts.street_type = StreetType.get_name(traffic_segment.frc)
+        if ts.distance > 0.0 and stop_segment.distance > 0.0:
+            ts.percent_of_stop_segment = float(ts.distance) / float(stop_segment.distance)
 
         return ts
 
@@ -103,6 +107,16 @@ class TrafficSegment(Base):
             s.print()
 
     def print(self, latest_speed_filter=False):
+        out = "\nsegments: {s.stop_segment_id} ({s.stop_segment.direction} {s.stop_segment.distance:5.1f}') -- " \
+              "{s.traffic_segment_id} ({s.direction} {s.distance:5.1f}'):\n".format(s = self)
+
+        if self.speeds and len(self.speeds) > 0:
+            for s in self.speeds:  # TODO: (maybe / optionally) only show latest and/or sort by capture time
+                out += " {}\n".format(s.print(do_print=False))
+
+        print(out)
+
+    def print_avg(self, latest_speed_filter=False):
         # import pdb; pdb.set_trace()
         out = "\nsegments: {s.stop_segment_id} ({s.stop_segment.direction} {s.stop_segment.distance:5.1f}') -- " \
               "{s.traffic_segment_id} ({s.direction} {s.distance:5.1f}'):\n".format(s = self)

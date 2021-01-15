@@ -31,7 +31,8 @@ class StopSegment(Base, PatternBase):
     distance = Column(Numeric(20, 10), nullable=False)
     bearing = Column(Numeric(20, 10))
     direction = Column(String(2))
-    shape_id = Column(String(255)) # note: the actual geom is only a partial shape .. line between the two stops
+
+    shape_id = Column(String(255))  # note: the actual geom is only a partial shape .. line between the two stops
     begin_distance = Column(Numeric(20, 10), nullable=False)
     end_distance = Column(Numeric(20, 10), nullable=False)
 
@@ -78,8 +79,8 @@ class StopSegment(Base, PatternBase):
         bsd = object_utils.safe_float(begin_stop.shape_dist_traveled)
         esd = object_utils.safe_float(end_stop.shape_dist_traveled)
         self.distance = esd - bsd
-        self.begin_distance = esd
-        self.end_distance = bsd
+        self.begin_distance = bsd
+        self.end_distance = esd
 
         self.bearing = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
         self.direction = geo_utils.compass(self.bearing)
