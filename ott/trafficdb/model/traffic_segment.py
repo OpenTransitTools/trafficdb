@@ -59,22 +59,21 @@ class TrafficSegment(Base):
         self.geom = traffic_segment.geom
 
     @classmethod
-    def factory(cls, stop_segment, traffic_segment):
-        return cls.inrix_factory(stop_segment, traffic_segment)
+    def factory(cls, segment_conflate):
+        return cls.inrix_factory(segment_conflate)
 
     @classmethod
-    def inrix_factory(cls, stop_segment, traffic_segment):
-        ts = TrafficSegment(stop_segment, traffic_segment)
+    def inrix_factory(cls, segment_conflate):
+        ts = TrafficSegment(segment_conflate.stop_segment, segment_conflate.traffic_segment)
 
         # custom inrix parsing
         # import pdb; pdb.set_trace()
         # TODO: Gtfs might be in different units ... here we're converting to feet (since I think that's what TM's gtfs is)
-        ts.distance = num_utils.to_float(traffic_segment.distance, 0.0) * 5280
-        ts.direction = traffic_segment.direction
-        ts.lanes = num_utils.to_float(traffic_segment.lanes, 0.0)
-        ts.street_type = StreetType.get_name(traffic_segment.frc)
-        if ts.distance > 0.0 and stop_segment.distance > 0.0:
-            ts.percent_of_stop_segment = float(ts.distance) / float(stop_segment.distance)
+        ts.distance = num_utils.to_float(segment_conflate.traffic_segment.distance, 0.0) * 5280
+        ts.direction = segment_conflate.traffic_segment.direction
+        ts.lanes = num_utils.to_float(segment_conflate.traffic_segment.lanes, 0.0, round_to=2)
+        ts.street_type = StreetType.get_name(segment_conflate.traffic_segment.frc)
+        ts.percent_of_stop_segment = num_utils.to_float(segment_conflate.transit_shp_percent, round_to=2)
 
         return ts
 

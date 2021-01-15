@@ -25,6 +25,10 @@ class ConflatedSegment(object):
     start_distance = 111.111
     end_distance = 111.111
 
+    # distance and percent that this transit segment occupies of the stop segment (pattern)
+    transit_shp_distance = 0.0
+    transit_shp_percent = 0.0
+
     is_very_close = False
     is_kinda_close = False
     rank = 111
@@ -72,8 +76,26 @@ class ConflatedSegment(object):
             ret_val = True
         return ret_val
 
+    def calculate_distance_percent(self, cfl, def_val=0.0):
+        """ calculates percents and distance of transit segment on the stop segment """
+        transit_dist = cfl.calculate_distance(self.stop_segment.shape_id, self.start_sequence, self.end_sequence, def_val)
+        self.transit_shp_distance = transit_dist
+
+        percent = 0.0
+        stop_dist = float(self.stop_segment.distance)
+        if stop_dist:
+            percent = float(transit_dist) / stop_dist
+        if percent > 1.0 or percent <= 0.05:
+            #import pdb; pdb.set_trace()
+            stop_dist = self.range_end - self.range_start
+            if stop_dist > 0.0:
+                percent = (self.end_sequence - self.start_sequence) / stop_dist
+        if percent > 1.0 or percent <= 0.0:
+            percent = 0.05
+        self.transit_shp_percent = percent
+
     def format_info(self):
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         msg = "{s.stop_segment.id:<11} ({s.stop_segment.direction:^2}) " \
           "{s.traffic_segment.id:>11} ({s.traffic_segment.direction} " \
           "{s.street_type:^14}): {s.range_start:>3} to {s.range_end:>3} - {s.start_sequence:>3} {s.end_sequence:>3} " \
@@ -99,6 +121,7 @@ class Conflate(object):
             if not self._shapes or self._shapes[0].shape_id != self._current_shape_id:
                 self._shapes = self.session.query(Shape).filter(Shape.shape_id == self._current_shape_id). \
                     order_by(Shape.shape_pt_sequence).all()
+                #print(self._shapes[0].shape_id)
         except Exception as e:
             log.warning(e)
             pass
@@ -182,6 +205,19 @@ class Conflate(object):
             ret_val = sorted(ret_val, key = lambda i: (i.range_start, i.start_sequence))
 
         return ret_val
+
+    def calculate_distance(self, shape_id, shape_start, shape_end, def_val=0.0):
+        """
+        """
+        try:
+            self._current_shape_id = shape_id
+            st = self.shapes[shape_start].shape_dist_traveled
+            ed = self.shapes[shape_end].shape_dist_traveled
+            ret_val = ed - st
+        except:
+            ret_val = def_val
+        return ret_val
+
 
     @classmethod
     def closest_points_are_different(cls, rez):

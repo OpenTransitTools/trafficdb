@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__file__)
 
 
-def filter_best_segments(segs):
+def filter_best_segments(segs, cfl):
     """
     filter segments
 
@@ -32,16 +32,21 @@ def filter_best_segments(segs):
         prev = ret_val[-1] if ret_val else s
         do_pop = not s.is_prev(prev)
 
+        rec = None
         if s.is_prev(prev):
-            ret_val.append(s)
+            rec = s
         elif s.is_closer(prev):
             if do_pop and ret_val:
                 ret_val.pop()
-            ret_val.append(s)
+            rec = s
         elif s.is_very_close:
-            ret_val.append(s)
+            rec = s
         # elif s.is_kinda_close
         # other_segs.append(s) put segs aside, and see if they fit into ret_val with a second pass
+
+        if rec:
+            rec.calculate_distance_percent(cfl)
+            ret_val.append(rec)
 
     return ret_val
 
@@ -61,11 +66,11 @@ def match_traffic_to_stop_segments(session, traffic_segments_cls):
         segments = []
         for s in session.query(StopSegment.shape_id).distinct():
             segments_all = cfl.ordered_segments(shape_id=s[0])
-            segments += filter_best_segments(segments_all)
+            segments += filter_best_segments(segments_all, cfl)
 
         # step 3: loop thru the found traffic segment data and create ORM objects for these things
         for s in segments:
-            ts = TrafficSegment.factory(s.stop_segment, s.traffic_segment)
+            ts = TrafficSegment.factory(s)
             ret_val.append(ts)
 
     except Exception as e:
