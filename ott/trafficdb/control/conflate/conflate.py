@@ -16,32 +16,59 @@ class ConflatedSegment(object):
     street_type = None
 
     # the range is the shape's pt. sequence of the stop_segment
-    range_start = -1
+    range_start = 1111111
     range_end = -1
 
     # the start_sequence / end_sequence is the shape's nearest sequence pt(s) for traffic seg's start/end
-    start_sequence = -1
+    start_sequence = 111111
     end_sequence = -1
     start_distance = 111.111
     end_distance = 111.111
+
+    is_very_close = False
+    is_kinda_close = False
+    rank = 111
+
+    def __init__(self, rez, range_start, range_end, start_seq, end_seq):
+        self.stop_segment = rez[0]
+        self.traffic_segment = rez[1]
+        self.street_type = StreetType.get_name(rez[1].frc)
+        self.range_start = range_start
+        self.range_end = range_end
+        self.start_sequence = start_seq
+        self.end_sequence = end_seq
+        self.start_distance = rez[4]
+        self.end_distance = rez[5]
+
+        if self.start_distance <= 0.0001 and self.end_distance <= 0.0001:
+            self.is_very_close = True
+        elif self.start_distance < 0.001 and self.end_distance <= 0.001:
+            self.is_kinda_close = False
 
     def in_sequence(self):
         """
         check the order of the start / end sequence
         (e.g., a street (line) in the opposite direction with have shape sequence pts in the wrong order)
         """
-        ret_val = self.start_sequence < self.end_sequence
+        ret_val = self.start_sequence < self.end_sequence and self.end_sequence > self.range_start
         return ret_val
 
     def overlap(self, obj):
         ret_val = False
-        if self.start_sequence <= obj.end_sequence and obj.start_sequence <= self.end_sequence:
+        if self.traffic_segment != obj.traffic_segment and \
+           self.start_sequence <= obj.end_sequence and obj.start_sequence <= self.end_sequence:
             ret_val = True
         return ret_val
 
+    def is_next(self, obj):
+        return self.end_sequence == obj.start_sequence
+
+    def is_prev(self, obj):
+        return obj.end_sequence == self.start_sequence
+
     def is_closer(self, obj):
         ret_val = False
-        if self.start_distance <= self.start_distance and self.end_distance <= obj.end_distance:
+        if self.start_distance <= obj.start_distance and self.end_distance <= obj.end_distance:
             ret_val = True
         return ret_val
 
@@ -121,20 +148,11 @@ class Conflate(object):
         # will make sure the index of the nearest transit segments are in the right order
         slat, slon = geo_utils.ll_from_point_str(rez[2])
         elat, elon = geo_utils.ll_from_point_str(rez[3])
-        st = Shape.get_sequence_from_coord(slat, slon, self.shapes[x - 1:y])
-        ed = Shape.get_sequence_from_coord(elat, elon, self.shapes[x - 1:y])
+        st = Shape.get_sequence_from_coord(slat, slon, self.shapes[x-1:y], def_val=-1)
+        ed = Shape.get_sequence_from_coord(elat, elon, self.shapes[x-1:y], def_val=-11)
 
         # factory
-        cs = ConflatedSegment()
-        cs.stop_segment = rez[0]
-        cs.traffic_segment = rez[1]
-        cs.street_type = StreetType.get_name(rez[1].frc)
-        cs.range_start = x
-        cs.range_end = y
-        cs.start_sequence = st
-        cs.end_sequence = ed
-        cs.start_distance = rez[4]
-        cs.end_distance = rez[5]
+        cs = ConflatedSegment(rez, x, y, st, ed)
         return cs
 
     def ordered_segments(self, shape_id, do_sort=True):
