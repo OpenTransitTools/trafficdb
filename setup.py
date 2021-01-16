@@ -9,10 +9,14 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 requires = [
     'venusian==1.2.0',
     'ott.utils',
+
     'gtfsdb',
     'geoalchemy2',
     'sqlalchemy',
     'zope.sqlalchemy',
+
+    'scipy',
+    'pandas',
 
     'pyramid',
     'pyramid_tm',

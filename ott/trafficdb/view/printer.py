@@ -1,6 +1,6 @@
 import time
 from ott.utils import json_utils
-import json
+
 
 from ott.trafficdb.model.traffic_segment import TrafficSegment
 from ott.trafficdb.control.utils import make_session
