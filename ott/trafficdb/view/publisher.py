@@ -67,8 +67,10 @@ def publisher():
     #import pdb; pdb.set_trace()
     session = cmdline()
     segments = TrafficSegment.query_segments(session, limit=4)
-
-    speeds = [make_segment_json(None)]
+    speeds = []
+    for s in segments:
+        spd = make_segment_json(s)
+        speeds.append(spd)
 
     s = {
         "date": int(time.time()),
