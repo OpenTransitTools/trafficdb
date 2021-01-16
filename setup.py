@@ -15,9 +15,6 @@ requires = [
     'sqlalchemy',
     'zope.sqlalchemy',
 
-    'scipy',
-    'pandas',
-
     'pyramid',
     'pyramid_tm',
     'pyramid_exclog',
