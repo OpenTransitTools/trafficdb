@@ -69,7 +69,7 @@ setup(
         load_speed_data = ott.trafficdb.control.speeds_to_segments:main
         match_segments = ott.trafficdb.control.conflate.match_segments:main
 
-        publisher = ott.trafficdb.view.printer:publisher
+        publisher = ott.trafficdb.view.publisher:main
         printer = ott.trafficdb.view.printer:main
         view_map = ott.trafficdb.view.geojson:main
         bbox = ott.trafficdb.view.bbox:main
