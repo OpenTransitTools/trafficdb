@@ -165,8 +165,8 @@ class Conflate(object):
         """
         # import pdb; pdb.set_trace()
         a = rez[0]
-        x = Shape.get_sequence_from_dist(a.begin_distance, self.shapes)
-        y = Shape.get_sequence_from_dist(a.end_distance, self.shapes)
+        x = Shape.get_sequence_from_dist(a.shape_begin_distance, self.shapes)
+        y = Shape.get_sequence_from_dist(a.shape_end_distance, self.shapes)
 
         # will make sure the index of the nearest transit segments are in the right order
         slat, slon = geo_utils.ll_from_point_str(rez[2])

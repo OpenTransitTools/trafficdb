@@ -33,39 +33,14 @@ class StopSegment(Base, PatternBase):
     direction = Column(String(2))
 
     shape_id = Column(String(255))  # note: the actual geom is only a partial shape .. line between the two stops
-    begin_distance = Column(Numeric(20, 10), nullable=False)
-    end_distance = Column(Numeric(20, 10), nullable=False)
+    shape_begin_distance = Column(Numeric(20, 10), nullable=False)
+    shape_end_distance = Column(Numeric(20, 10), nullable=False)
 
     traffic_segment = relationship(
         'TrafficSegment',
         primaryjoin='TrafficSegment.stop_segment_id==StopSegment.id',
         foreign_keys='(TrafficSegment.stop_segment_id)',
         uselist=True, viewonly=True)
-
-    ## define relationships (usually do this above outside constructor, but doesn't work for some reason)
-    """
-    '''
-    begin_stop = relationship(
-        'Stop',
-        primaryjoin='Stop.stop_id==StopSegment.begin_stop_id',
-        foreign_keys='(StopSegment.begin_stop_id)',
-        uselist=False, viewonly=True
-    )
-
-    end_stop = relationship(
-        'Stop',
-        primaryjoin='Stop.stop_id==StopSegment.end_stop_id',
-        foreign_keys='(StopSegment.end_stop_id)',
-        uselist=False, viewonly=True
-    )
-    '''
-    shape_id = Column(String(255), ForeignKey(Shape.shape_id))
-    shapes = relationship(
-        Shape,
-        primaryjoin='Shape.shape_id==StopSegment.shape_id',
-        foreign_keys='(Shape.shape_id)',
-        uselist=True, viewonly=True)
-    """
 
     def __init__(self, session, id, begin_stop, end_stop, trip):
         super(StopSegment, self).__init__()
@@ -79,8 +54,8 @@ class StopSegment(Base, PatternBase):
         bsd = object_utils.safe_float(begin_stop.shape_dist_traveled)
         esd = object_utils.safe_float(end_stop.shape_dist_traveled)
         self.distance = esd - bsd
-        self.begin_distance = bsd
-        self.end_distance = esd
+        self.shape_begin_distance = bsd
+        self.shape_end_distance = esd
 
         self.bearing = geo_utils.bearing(begin_stop.stop.stop_lat, begin_stop.stop.stop_lon, end_stop.stop.stop_lat, end_stop.stop.stop_lon)
         self.direction = geo_utils.compass(self.bearing)
@@ -92,6 +67,15 @@ class StopSegment(Base, PatternBase):
             except:
                 #import pdb; pdb.set_trace()
                 log.warning("can't make geom for {}".format(id))
+
+    @classmethod
+    def query_segments(cls, session, limit=None):
+        q = session.query(StopSegment).order_by(StopSegment.id)
+        if limit and type(limit) is int:
+            segments = q.limit(limit)
+        else:
+            segments = q.all()
+        return segments
 
     @classmethod
     def _make_shapes(cls, session, begin_stop, end_stop, trip):
