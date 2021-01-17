@@ -5,6 +5,7 @@ from ott.trafficdb.view.geojson import stop_geojson, local_server
 from ott.trafficdb.control.inrix.segment_data import load as inrix_segment_loader
 from ott.trafficdb.control.conflate.match_segments import match_traffic_to_stop_segments
 from ott.trafficdb.control.speeds_to_segments import speeds_via_bbox
+from . import utils
 
 from gtfsdb.scripts import get_args, make_kwargs
 import logging
@@ -12,8 +13,7 @@ log = logging.getLogger(__file__)
 
 # customize the cmdline parser with room for traffic segments .geojson file
 parser, kwargs = get_args(do_parse=False)
-parser.add_argument('--transit_segments', '-t', default=None, nargs='*', help="transit segment file(s)")
-args = parser.parse_args()
+args = utils.add_transitdb_args(parser)
 kwargs = make_kwargs(args)
 
 

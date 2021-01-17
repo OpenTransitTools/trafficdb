@@ -107,17 +107,17 @@ class TrafficSegment(Base):
         if not hasattr(cls, 'geom'):
             cls.geom = deferred(Column(Geometry(geometry_type='LINESTRING', srid=4326)))
 
-    def print_segment(self, latest_speed_filter=False):
+    def print_segment(self, latest_speed_filter=False, just_speeds=False):
         out = "\nsegments: {s.stop_segment_id} ({s.stop_segment.direction} {s.stop_segment.distance:5.1f}') -- " \
               "{s.traffic_segment_id} ({s.direction} {s.distance:5.1f}'):\n".format(s = self)
-        out += self.print_speeds(do_print=False)
+        if self.speeds and len(self.speeds) > 0:
+            out += self.print_speeds(do_print=False)
         print(out)
 
     def print_speeds(self, pre=" ", post="\n", do_print=True):
         out = ""
-        if self.speeds and len(self.speeds) > 0:
-            for s in self.speeds:  # TODO: (maybe / optionally) only show latest and/or sort by capture time
-                out += "{}{}{}".format(pre, s.print(do_print=False), post)
+        for s in self.speeds:  # TODO: (maybe / optionally) only show latest and/or sort by capture time
+            out += "{}{}{}".format(pre, s.print(do_print=False), post)
         if do_print:
             print(out)
         return out
@@ -126,7 +126,4 @@ class TrafficSegment(Base):
     def print_all(cls, session, limit=None, just_speeds=False):
         segments = cls.query_segments(session, limit)
         for s in segments:
-            if just_speeds:
-                s.print_speeds(post="")
-            else:
-                s.print_segment()
+            s.print_segment(just_speeds=just_speeds)

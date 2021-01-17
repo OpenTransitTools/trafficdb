@@ -1,5 +1,7 @@
 from ott.trafficdb.model.database import Database
 from ott.trafficdb.model.traffic_segment import TrafficSegment
+from ott.trafficdb.model.traffic_segment_speed import TrafficSegmentSpeed
+
 from ott.trafficdb.control.utils import make_session
 
 import logging
@@ -31,7 +33,7 @@ def speeds_via_id(ids):
 def main(cmd_name="bin/load_speed_data", via_bbox=True):
     # step 1: cmd line options to obtain session
     # import pdb; pdb.set_trace()
-    session = make_session(cmd_name)
+    session, args = make_session(cmd_name, return_args=True)
 
     # step 2: http get the latest traffic speed data from vendor (either via bbox or vendor's segment ids)
     if via_bbox:
@@ -42,12 +44,18 @@ def main(cmd_name="bin/load_speed_data", via_bbox=True):
         ids = ','.join(map(str, segment_ids))
         speed_recs = speeds_via_id(ids)
 
-    # step 3: persist that data to database
-    Database.persist_data(session, speed_recs)
+    if speed_recs and len(speed_recs) > 0:
+        # step 3: test whether to clear the speed db table prior to loading new data
+        if args.clear_speeds:
+            TrafficSegmentSpeed.clear_tables(session)
 
-    # step 4: query the db and print out the speed data
-    TrafficSegment.print_all(session, just_speeds=True)
+        # step 4: persist that data to database
+        Database.persist_data(session, speed_recs)
 
+        # step 5: query the db and print out the speed data
+        TrafficSegment.print_all(session, just_speeds=True)
+    else:
+        log.warning("didn't see any speed data come back from the transit service ... ")
 
 if __name__ == '__main__':
     main()
