@@ -26,9 +26,10 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
     - vendorid = ___ 
     - consumerid = ___
     - note: if you don't do this, you won't see any speed data 
+    - git update-index --assume-unchanged config/base.ini 
 - run `bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip`
 - run `bin/load_speed_data -s test -d postgres://ott@localhost:5432/ott`  # note: run this every N minutes to get up-to-date speed data into the database  
- 
+
 ### Manual Install (real transit data load):
 ##### if the above load_all worked well, then the next step will be to load a full dataset
  - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/

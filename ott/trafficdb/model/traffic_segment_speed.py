@@ -60,8 +60,8 @@ class TrafficSegmentSpeed(Base):
         else:
             tss.is_realtime = False
 
+        tss.slowest_speed = tss.fastest_speed = tss.current_speed
         if object_utils.is_list(rec, 'subSegments'):
-            tss.slowest_speed = tss.fastest_speed = tss.current_speed
             tss.all_speeds = "{}".format(tss.current_speed)
             for sub in rec['subSegments']:
                 sub_speed = object_utils.safe_get_float(sub, 'speed')
