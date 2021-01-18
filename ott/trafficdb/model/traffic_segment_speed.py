@@ -73,7 +73,7 @@ class TrafficSegmentSpeed(Base):
 
         return tss
 
-    def print(self, do_print=True):
+    def printer(self, do_print=True):
         ret_val = "{s.capture_time:%Y-%m-%d %I:%M%p} -- speed:{s.current_speed:5.1f}  freeflow:{s.freeflow_speed:5.1f}" \
                   "  avg:{s.average_speed:5.1f}  time:{s.travel_time:6.3f}  (realtime is {s.is_realtime}" \
                   " with {s.rt_confidence:>3}% confidence)".format(s=self).lower()

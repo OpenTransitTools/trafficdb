@@ -117,7 +117,7 @@ class TrafficSegment(Base):
     def print_speeds(self, pre=" ", post="\n", do_print=True):
         out = ""
         for s in self.speeds:  # TODO: (maybe / optionally) only show latest and/or sort by capture time
-            out += "{}{}{}".format(pre, s.print(do_print=False), post)
+            out += "{}{}{}".format(pre, s.printer(do_print=False), post)
         if do_print:
             print(out)
         return out

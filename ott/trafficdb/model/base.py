@@ -171,9 +171,9 @@ class _Base(object):
     @classmethod
     def print_all(cls, session):
         for o in session.query(cls).all():
-            o.print()
+            o.printer()
 
-    def print(self):
+    def printer(self):
         print(self.__dict__)
 
 
