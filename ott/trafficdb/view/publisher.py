@@ -8,12 +8,6 @@ import logging
 log = logging.getLogger(__file__)
 
 
-def cmdline(cmd_name="bin/publisher"):
-    # todo ... add options for output file and directory, etc...
-    session = make_session(cmd_name)
-    return session
-
-
 def calculate_segment_speed_data(rec, date):
     """
     loop thru segments and speeds, and find junk
@@ -113,12 +107,12 @@ def make_segment_json(rec, date):
     return ret_val
 
 
-def publisher():
+def publisher(session, out_dir=None, do_print=False):
     """
+    generate json file of segments + speeds
     """
     # import pdb; pdb.set_trace()
     date = int(time.time())
-    session = cmdline()
     segments = StopSegment.query_segments(session)
     speeds = []
     for s in segments:
@@ -129,9 +123,19 @@ def publisher():
         "numSpeedRecords": len(segments),
         "speeds": speeds
     }
+
+    # output / print
+    if out_dir:
+        out_file = "{}/{}.json".format(out_dir, date)
+        json_utils.dict_to_json_file(out_file, rec, pretty_print=True, indent=2)
+
     json_str = json_utils.dict_to_json_str(rec, pretty_print=True, indent=2)
-    print(json_str)
+    if do_print:
+        print(json_str)
+    return json_str
 
 
 def main():
-    publisher()
+    session, args = make_session("bin/publisher", return_args=True)
+    do_print = False if args.output_dir else True
+    publisher(session, args.output_dir, do_print)
