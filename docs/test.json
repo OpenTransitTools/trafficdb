@@ -19,21 +19,12 @@
       "travelTimeInMins": 0.395
     },
     {
-      "averageSpeed": 9.97,
       "beginStopId": "10752",
-      "confidence": 82.41,
-      "currentSpeed": 13.22,
-      "date": 1610841526,
+      "date": 1610841500,
       "endStopId": "10753",
-      "freeflowSpeed": 11.94,
-      "hasSpeedData": true,
+      "hasSpeedData": false,
       "id": "10752-10753",
-      "isRealtime": true,
       "lengthInFeet": 1014,
-      "maxSpeed": 18.0,
-      "minSpeed": 5.0,
-      "numberOfLanes": 1.0,
-      "travelTimeInMins": 0.2621
     },
     {
       "averageSpeed": 13.0,
