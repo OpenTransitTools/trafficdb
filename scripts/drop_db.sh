@@ -1,8 +1,7 @@
 ##
 ## drop OTT database
 ##
-psql=`which psql`
-def_db=postgres
-user=ott
-db=ott
-$psql -d $def_db -c "DROP DATABASE ${db};"
+DIR=`dirname $0`
+. $DIR/db_base.sh
+
+$psql -h $host -p $port -U $def_db -d $def_db -c "DROP DATABASE ${db};"

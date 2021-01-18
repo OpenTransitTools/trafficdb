@@ -7,6 +7,8 @@
 ##
 DIR=`dirname $0`
 
+host=${DB_HOST:=localhost}
+port=${DB_PORT:=5432}
 name=${DB_NAME:=ott}
 user=${DB_USER:=ott}
 schema=${DB_SCHEMA:=trimet}
@@ -14,7 +16,7 @@ table_name=${TABLE_NAME:=traffic_inrix_segments}
 rename_columns=${COL_RENAME:="xdsegid=id, bearing=direction, miles=distance"}
 geojson_files=${*:-"$DIR/../../model/inrix/test/inrix.geojson"}
 
-db_opts="-f 'PostgreSQL' PG:'dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
+db_opts="-f 'PostgreSQL' PG:'host=$host port=$port dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
 table_cmd="-nln $table_name"
 overwrite="-overwrite"
 
@@ -40,7 +42,7 @@ if [[ ! -z "$rename_columns" ]]; then
   do
     f=${frmto[i]%=*}
     t=${frmto[i]#*=}
-    alter="psql $name $user -c 'ALTER TABLE $schema.$table_name RENAME $f TO $t;'"
+    alter="psql -h $host -p $port $name $user -c 'ALTER TABLE $schema.$table_name RENAME $f TO $t;'"
     echo $alter
     eval $alter
   done

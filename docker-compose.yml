@@ -1,0 +1,13 @@
+version: "3"
+services:
+  postgis:
+    image: postgis/postgis
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/data
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=postgres
+volumes:
+  db-data:
