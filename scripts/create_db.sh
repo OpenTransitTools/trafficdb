@@ -6,7 +6,7 @@ DIR=`dirname $0`
 
 for d in $db
 do
-  $psql -h $host -p $port -U $def_db -d $def_db -c "CREATE USER ${user};"
-  $psql -h $host -p $port -U $def_db -d $def_db -c "CREATE DATABASE ${d} WITH OWNER ${user};"
-  $psql -h $host -p $port -U $def_db -d ${d} -c "CREATE EXTENSION postgis;"
+  $psql -h $host -p $port -U $def_user -d $def_db -c "CREATE USER ${user};"
+  $psql -h $host -p $port -U $def_user -d $def_db -c "CREATE DATABASE ${d} WITH OWNER ${user};"
+  $psql -h $host -p $port -U $def_user -d ${d} -c "CREATE EXTENSION postgis;"
 done
