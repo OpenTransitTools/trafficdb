@@ -1,7 +1,7 @@
 ##
 ## crete OTT spatial db for OTT
 ##
-psql=`which psql`
+psql=${PSQL:=psql}
 def_db=postgres
 user=ott
 db=ott
