@@ -1,13 +1,19 @@
 version: "3"
+networks:
+  default:
+    driver: bridge
 services:
   postgis:
     image: postgis/postgis
-    ports:
-      - "5432:5432"
+    container_name: postgis
+    ports: [ "5432:5432" ]
+    restart: always
     volumes:
       - db-data:/data
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_USER=postgres
+
 volumes:
   db-data:
+

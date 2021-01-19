@@ -7,6 +7,7 @@
 ##
 DIR=`dirname $0`
 
+ogr2ogr=${OGR_2_OGR:=ogr2ogr}
 host=${DB_HOST:=localhost}
 port=${DB_PORT:=5432}
 name=${DB_NAME:=ott}
@@ -29,7 +30,7 @@ overwrite="-overwrite"
 for f in $geojson_files
 do
   sql=""
-  cmd="ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
+  cmd="$ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
   echo $cmd
   eval $cmd
   overwrite=""
