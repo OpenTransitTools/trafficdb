@@ -14,6 +14,7 @@ requires = [
     'geoalchemy2',
     'sqlalchemy',
     'zope.sqlalchemy',
+    'psycopg2-binary',
 
     'pyramid',
     'pyramid_tm',
@@ -29,7 +30,7 @@ extras_require = dict(
 setup(
     name='ott.trafficdb',
     version='0.1.0',
-    description='Open Transit Tools - OpenMapTiles Data/Style/etc... Server',
+    description='Open Transit Tools - traffic database for speed and congestion data',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
         "Programming Language :: Python",
