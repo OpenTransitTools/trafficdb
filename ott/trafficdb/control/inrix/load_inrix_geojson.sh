@@ -8,16 +8,17 @@
 DIR=`dirname $0`
 
 ogr2ogr=${OGR_2_OGR:=ogr2ogr}
-host=${DB_HOST:=localhost}
+psql=${PSQL:=psql}
+host=${DB_HOST:=127.0.0.1}
 port=${DB_PORT:=5432}
 name=${DB_NAME:=ott}
 user=${DB_USER:=ott}
 schema=${DB_SCHEMA:=trimet}
 table_name=${TABLE_NAME:=traffic_inrix_segments}
 rename_columns=${COL_RENAME:="xdsegid=id, bearing=direction, miles=distance"}
-geojson_files=${*:-"$DIR/../../model/inrix/test/inrix.geojson"}
+geojson_files=${*:-"$DIR/inrix.geojson"}
 
-db_opts="-f 'PostgreSQL' PG:'host=$host port=$port dbname=$name user=$user active_schema=$schema' -lco GEOMETRY_NAME=geom"
+db_opts="-f \"PostgreSQL\" PG:\"host=$host port=$port dbname='${name}' user='${user}' active_schema='${schema}'\" -lco GEOMETRY_NAME=geom"
 table_cmd="-nln $table_name"
 overwrite="-overwrite"
 
@@ -32,7 +33,7 @@ do
   sql=""
   cmd="$ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
   echo $cmd
-  eval $cmd
+  $eval $cmd
   overwrite=""
 done
 
@@ -43,7 +44,7 @@ if [[ ! -z "$rename_columns" ]]; then
   do
     f=${frmto[i]%=*}
     t=${frmto[i]#*=}
-    alter="psql -h $host -p $port $name $user -c 'ALTER TABLE $schema.$table_name RENAME $f TO $t;'"
+    alter="$psql -h $host -p $port $name $user -c 'ALTER TABLE $schema.$table_name RENAME $f TO $t;'"
     echo $alter
     eval $alter
   done

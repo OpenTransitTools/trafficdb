@@ -6,13 +6,18 @@ services:
   postgis:
     image: postgis/postgis
     container_name: postgis
-    ports: [ "5432:5432" ]
+    ports:
+      - "5432:5432"
     restart: always
     volumes:
       - db-data:/data
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_USER=postgres
+  gdal:
+    image: osgeo/gdal:ubuntu-small-latest
+    container_name: gdal
+    restart: "no"
 
 volumes:
   db-data:
