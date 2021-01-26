@@ -65,11 +65,12 @@ class TrafficSegmentSpeed(Base):
             tss.all_speeds = "{}".format(tss.current_speed)
             for sub in rec['subSegments']:
                 sub_speed = object_utils.safe_get_float(sub, 'speed')
-                tss.all_speeds += ":{}".format(sub_speed)
-                if sub_speed < tss.slowest_speed:
-                    tss.slowest_speed = sub_speed
-                if sub_speed > tss.fastest_speed:
-                    tss.fastest_speed = sub_speed
+                if sub_speed >= 0.0 and sub_speed < 111.111:  # do a check ... getting 255 in one max speed record
+                    tss.all_speeds += ":{}".format(sub_speed)
+                    if sub_speed < tss.slowest_speed:
+                        tss.slowest_speed = sub_speed
+                    if sub_speed > tss.fastest_speed:
+                        tss.fastest_speed = sub_speed
 
         return tss
 
