@@ -5,23 +5,23 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
 
 
 #### Example stop & traffic maps: 
-- [TriMet (Portland, OR)](https://opentransittools.github.io/trafficdb/#11.0/45.51357/-122.66579/0/20) stop & traffic map
-- [C-Tran (Vancouver, WA)](https://opentransittools.github.io/trafficdb?segments=ctran.geojson#11.0/45.582/-122.426/0/20) stop & traffic map 
-- [ACTransit (Oakland, CA)](https://opentransittools.github.io/trafficdb?segments=actransit.geojson#11.0/37.6722/-122.0564/0/20) stop & traffic map 
+- [TriMet (Portland, OR)](https://opentransittools.github.io/trafficdb/#11.0/45.51357/-122.66579/0/20)
+- [C-Tran (Vancouver, WA)](https://opentransittools.github.io/trafficdb?segments=ctran.geojson#11.0/45.582/-122.426/0/20)
+- [RVTD (Medford, OR)]() TBD
+- [ACTransit (Oakland, CA)](https://opentransittools.github.io/trafficdb?segments=actransit.geojson#11.0/37.6722/-122.0564/0/20)
+- [VTA (San Jose, CA)]() TBD
 - [RTD (Denver, CO)]() TBD
 
-
-## Two options to install and run trafficdb (eventually) are either Docker Install or Manual Install
-
-### Docker Install: todo
-
-### Manual Install (step 1: mock data load):
-- _prerequisite install_: git, postgres, psql, postgis, ogr2ogr, python 3.x, zc.buildout
-- Clone the trafficdb repo: `git clone https://github.com/OpenTransitTools/trafficdb.git`
+### Manual Install 
+- _prerequisite install_: git, postgres, psql, postgis, ogr2ogr (gdal), python 3.x, psycopg2-binary, zc.buildout.
+  - note: there is a docker-compose alternative to installing PostGIS, gdal and ogr2ogr (see below)
+  - for python, it should be just a matter of getting python installed, then doing a `pip install psycopg2-binary zc.buildout`
+- clone the trafficdb repo: 
+`git clone https://github.com/OpenTransitTools/trafficdb.git`
 - `cd trafficdb`
 - run the `scripts/create_db.sh` shell script
 - run [buildout](https://pypi.org/project/zc.buildout/) to pull in python dependencies
-- add your _INRIX credentials_ to config/base.ini
+- add your _INRIX credentials_ to *trafficdb/config/base.ini*
    - [inrix] 
     - vendorid = ___ 
     - consumerid = ___
@@ -30,25 +30,36 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
 - run `bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott ott/trafficdb/model/inrix/test/gtfs.zip`
 - run `bin/load_speed_data -s test -d postgres://ott@localhost:5432/ott`  # note: run this every N minutes to get up-to-date speed data into the database  
 
+### Docker-Compose alternative install of PostGIS and GDAL:
+- install Docker and Docker-Compose 
+- cd transitdb
+- docker-compose up
+- . ./scripts/docker_dot_source_me.sh
+
+
 ### Manual Install (real transit data load):
 ##### if the above load_all worked well, then the next step will be to load a full dataset
  - grab INRIX's .geojson traffic segment data from https://map-data-downloader.inrix.com/
    - for the example below, using TriMet's latest GTFS file, you should download and unzip the USA_Oregon_geojson.zip file 
 
 https://developer.trimet.org/GTFS.shtml
-bin/load_all -c -g -s test -d postgres://ott@localhost:5432/ott https://developer.trimet.org/schedule/gtfs.zip -t USA_Oregon.geojson
+bin/load_all -c -g -s trimet -t $PWD/USA_Oregon.geojson -d postgres://ott@localhost:5432/ott https://developer.trimet.org/schedule/gtfs.zip
 bin/load_speed_data -s trimet
 
+https://www.rvtd.org/Page.asp?NavID=60
+bin/load_all -c -g -s rvtd -t $PWD/USA_Oregon.geojson -d postgres://ott@localhost:5432/ott http://feed.rvtd.org/googleFeeds/static/google_transit.zip
+bin/load_speed_data -s rvtd
+
 https://www.c-tran.com/about-c-tran/business/c-tran-gtfs-data
-bin/load_all -c -g -s ctran -d postgres://ott@localhost:5432/ott https://www.c-tran.com/images/Google/GoogleTransitUpload.zip -t USA_Washington.geojson USA_Oregon.geojson
+bin/load_all -c -g -s ctran -t $PWD/USA_Washington.geojson $PWD/USA_Oregon.geojson -d postgres://ott@localhost:5432/ott https://www.c-tran.com/images/Google/GoogleTransitUpload.zip
 bin/load_speed_data -s ctran
 
 https://gtfs.vta.org/
-bin/load_all -c -g -s vta -d postgres://ott@localhost:5432/ott https://gtfs.vta.org/gtfs_vta.zip -t USA_CA_BayArea.geojson 
+bin/load_all -c -g -s vta -t $PWD/USA_CA_BayArea.geojson -d postgres://ott@localhost:5432/ott https://gtfs.vta.org/gtfs_vta.zip
 bin/load_speed_data -s vta
 
 http://www.actransit.org/planning-focus/data-resource-center/
-bin/load_all -c -g -s actransit -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent -t USA_CA_BayArea.geojson 
+bin/load_all -c -g -s actransit  -t $PWD/USA_CA_BayArea.geojson -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent
 bin/load_speed_data -s actransit
 
 https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
