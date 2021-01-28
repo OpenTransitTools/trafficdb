@@ -13,7 +13,7 @@ host=${DB_HOST:=127.0.0.1}
 port=${DB_PORT:=5432}
 name=${DB_NAME:=ott}
 user=${DB_USER:=ott}
-schema=${DB_SCHEMA:=trimet}
+schema=${DB_SCHEMA:=test}
 table_name=${TABLE_NAME:=traffic_inrix_segments}
 rename_columns=${COL_RENAME:="xdsegid=id, bearing=direction, miles=distance"}
 geojson_files=${*:-"$DIR/inrix.geojson"}
@@ -33,7 +33,7 @@ do
   sql=""
   cmd="$ogr2ogr $db_opts $table_cmd $overwrite -skipfailures -explodecollections $f"
   echo $cmd
-  $eval $cmd
+  eval $cmd
   overwrite=""
 done
 
