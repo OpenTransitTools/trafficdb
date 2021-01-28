@@ -24,7 +24,9 @@ class StopSegment(Base, PatternBase):
     __tablename__ = 'traffic_stop_segments'
 
     begin_stop_id = Column(String(255), index=True, nullable=False)
+    begin_stop_code = Column(String(255), nullable=False)
     end_stop_id = Column(String(255), index=True, nullable=False)
+    end_stop_code = Column(String(255), nullable=False)
 
     begin_time = Column(String(9), nullable=False)
     end_time = Column(String(9), nullable=False)
@@ -45,8 +47,12 @@ class StopSegment(Base, PatternBase):
     def __init__(self, session, id, begin_stop, end_stop, trip):
         super(StopSegment, self).__init__()
         self.id = id
+
         self.begin_stop_id = begin_stop.stop_id
+        self.begin_stop_code = begin_stop.stop.stop_code
         self.end_stop_id = end_stop.stop_id
+        self.end_stop_code = end_stop.stop.stop_code
+
         self.shape_id = trip.shape_id
         self.begin_time = begin_stop.arrival_time
         self.end_time = end_stop.departure_time
@@ -62,6 +68,11 @@ class StopSegment(Base, PatternBase):
 
         if hasattr(self, 'geom'):
             self.make_shapes(session, begin_stop, end_stop, trip)
+
+    @property
+    def code_id(self):
+        id = "{}-{}".format(self.begin_stop_code, self.end_stop_code)
+        return id
 
     def make_shapes(self, session, begin_stop, end_stop, trip):
         """
@@ -80,6 +91,8 @@ class StopSegment(Base, PatternBase):
 
             # step 2: if the line doesn't look long enough, let's hack a line together with 2 points.
             if good_line is False:
+                log.warning("segment too short for shape {}, so creating 2-point line between stops {} and {}".format(
+                    trip.shape_id, begin_stop.stop.stop_code, end_stop.stop.stop_code))
                 self.geom = util.make_linestring_from_two_stops(begin_stop.stop, end_stop.stop)
         except:
             log.warning("can't make geom for {}".format(id))
@@ -188,6 +201,7 @@ class StopSegment(Base, PatternBase):
         """
         feature_tmpl = '    {{"type": "Feature", "properties": {{' \
                        '"id": "{}", ' \
+                       '"code": "{}", ' \
                        '"info": "{}", ' \
                        '"layer": "{}" ' \
                        '}}, "geometry": {}}}{}'
@@ -205,13 +219,13 @@ class StopSegment(Base, PatternBase):
         for i, f in enumerate(features):
             geom = session.scalar(func.ST_AsGeoJSON(f.geom))
             if last_stop != f.begin_stop_id:
-                featgeo += feature_tmpl.format(f.begin_stop_id, "", "stop", stop_cache[f.begin_stop_id], ",\n")
-            featgeo += feature_tmpl.format(f.id, f.direction, "stop", geom, ",\n")
+                featgeo += feature_tmpl.format(f.begin_stop_id, f.begin_stop_code, "", "stop", stop_cache[f.begin_stop_id], ",\n")
+            featgeo += feature_tmpl.format(f.id, f.code_id, f.direction, "stop", geom, ",\n")
             for t in f.traffic_segment:
                 tgeo = session.scalar(func.ST_AsGeoJSON(t.geom))
-                featgeo += feature_tmpl.format(t.traffic_segment_id + " (" + f.id + ")", t.direction, "traffic", tgeo, ",\n")
+                featgeo += feature_tmpl.format(t.traffic_segment_id, t.traffic_segment_id + " (" + f.code_id + ")", t.direction, "traffic", tgeo, ",\n")
             comma = ",\n" if i < ln else "\n"  # don't add a comma to last feature
-            featgeo += feature_tmpl.format(f.end_stop_id, "", "stop", stop_cache[f.end_stop_id], comma)
+            featgeo += feature_tmpl.format(f.end_stop_id, f.end_stop_code, "", "stop", stop_cache[f.end_stop_id], comma)
             last_stop = f.end_stop_id
 
         geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n{}  ]\n}}'.format(featgeo)

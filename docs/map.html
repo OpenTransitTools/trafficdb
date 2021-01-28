@@ -224,7 +224,7 @@
         'layout': {
             'symbol-placement': 'line',
             'text-font': ['Open Sans Regular'],
-            'text-field': ['get', 'id'],
+            'text-field': ['get', 'code'],
             'text-size': { stops: [[8, 2], [11, 12], [16, 18]] }
         },
         'filter': ['in', 'id', '']
@@ -240,7 +240,7 @@
         map.getCanvas().style.cursor = 'pointer';
 
         var coordinates = e.features[0].geometry.coordinates.slice();
-        var description = "Stop ID: " + e.features[0].properties.id;
+        var description = "Stop ID: " + e.features[0].properties.code;
 
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
