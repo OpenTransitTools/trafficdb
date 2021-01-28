@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Numeric, func
 from sqlalchemy.orm import relationship
-from gtfsdb import Stop, Trip, Shape, PatternBase
+from gtfsdb import Stop, Trip, Shape, PatternBase, util
 
 from ott.trafficdb.model.base import Base
 from ott.utils import geo_utils
@@ -61,34 +61,28 @@ class StopSegment(Base, PatternBase):
         self.direction = geo_utils.compass(self.bearing)
 
         if hasattr(self, 'geom'):
-            try:
-                q = self._make_shapes(session, begin_stop, end_stop, trip)
-                self.geom_from_shape(q)
-            except:
-                #import pdb; pdb.set_trace()
-                log.warning("can't make geom for {}".format(id))
+            self.make_shapes(session, begin_stop, end_stop, trip)
 
-    @classmethod
-    def query_segments(cls, session, limit=None):
-        q = session.query(StopSegment).order_by(StopSegment.id)
-        if limit and type(limit) is int:
-            segments = q.limit(limit)
-        else:
-            segments = q.all()
-        return segments
+    def make_shapes(self, session, begin_stop, end_stop, trip):
+        """
+        make a shape
+        note: begin_stop and end_stop are StopTime objects
+        """
+        # import pdb; pdb.set_trace()
+        try:
+            # step 1: try to make a line between 2 stops via the shapes and the distance travelled
+            shp = session.query(Shape) \
+                .filter(Shape.shape_id == trip.shape_id) \
+                .filter(Shape.shape_dist_traveled >= begin_stop.shape_dist_traveled) \
+                .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled) \
+                .order_by(Shape.shape_pt_sequence)
+            good_line = self.geom_from_shape(shp)
 
-    @classmethod
-    def _make_shapes(cls, session, begin_stop, end_stop, trip):
-        """
-        return the shape points between two stops along a trip
-        TODO: could be a gtfsdb utility belonging to Shape. class
-        """
-        ret_val = session.query(Shape) \
-            .filter(Shape.shape_id == trip.shape_id) \
-            .filter(Shape.shape_dist_traveled >= begin_stop.shape_dist_traveled) \
-            .filter(Shape.shape_dist_traveled <= end_stop.shape_dist_traveled) \
-            .order_by(Shape.shape_pt_sequence)
-        return ret_val
+            # step 2: if the line doesn't look long enough, let's hack a line together with 2 points.
+            if good_line is False:
+                self.geom = util.make_linestring_from_two_stops(begin_stop.stop, end_stop.stop)
+        except:
+            log.warning("can't make geom for {}".format(id))
 
     @classmethod
     def _cache_segment(cls, session, begin_stop, end_stop, trip, segment_cache, segment_trip_cache):
@@ -170,6 +164,15 @@ class StopSegment(Base, PatternBase):
 
         except Exception as e:
             log.exception(e)
+
+    @classmethod
+    def query_segments(cls, session, limit=None):
+        q = session.query(StopSegment).order_by(StopSegment.id)
+        if limit and type(limit) is int:
+            segments = q.limit(limit)
+        else:
+            segments = q.all()
+        return segments
 
     @classmethod
     def to_geojson(cls, session):
