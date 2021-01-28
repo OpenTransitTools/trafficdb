@@ -18,7 +18,7 @@ table_name=${TABLE_NAME:=traffic_inrix_segments}
 rename_columns=${COL_RENAME:="xdsegid=id, bearing=direction, miles=distance"}
 geojson_files=${*:-"$DIR/inrix.geojson"}
 
-db_opts="-f \"PostgreSQL\" PG:\"host=$host port=$port dbname='${name}' user='${user}' active_schema='${schema}'\" -lco GEOMETRY_NAME=geom"
+db_opts="-f \"PostgreSQL\" PG:\"host=$host port=$port active_schema=$schema dbname='${name}' user='${user}' \" -lco GEOMETRY_NAME=geom"
 table_cmd="-nln $table_name"
 overwrite="-overwrite"
 
