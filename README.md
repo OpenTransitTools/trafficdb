@@ -5,12 +5,13 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
 
 
 #### Example stop & traffic maps: 
-- [TriMet (Portland, OR)](https://opentransittools.github.io/trafficdb/#11.0/45.51357/-122.66579/0/20)
+- [TriMet (Portland, OR)](https://opentransittools.github.io/trafficdb?segments=trimet.geojson#11.0/45.51357/-122.66579/0/20)
 - [C-Tran (Vancouver, WA)](https://opentransittools.github.io/trafficdb?segments=ctran.geojson#11.0/45.582/-122.426/0/20)
-- [RVTD (Medford, OR)]() TBD
+- [RVTD (Medford, OR)](https://opentransittools.github.io/trafficdb?segments=rvtd.geojson#11.0/42.3121/-122.821/0/20)
 - [ACTransit (Oakland, CA)](https://opentransittools.github.io/trafficdb?segments=actransit.geojson#11.0/37.6722/-122.0564/0/20)
-- [VTA (San Jose, CA)]() TBD
-- [RTD (Denver, CO)]() TBD
+- [VTA (San Jose, CA)](https://opentransittools.github.io/trafficdb?segments=vta.geojson#11.0/37.256/-121.8944/0/20)
+- [RTD (Denver, CO)](https://opentransittools.github.io/trafficdb?segments=rtd.geojson#11.0/39.7036/-104.8601/0/20)
+
 
 ### Manual Install 
 - _prerequisite install_: git, postgres, psql, postgis, ogr2ogr (gdal), python 3.x, psycopg2-binary, zc.buildout.
@@ -63,8 +64,8 @@ bin/load_all -c -g -s actransit  -t $PWD/USA_CA_BayArea.geojson -d postgres://ot
 bin/load_speed_data -s actransit
 
 https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
-note: problem with gtfsdb's GET and RTD's web server means that you probably need to download gtfs file locally and change the https: below to the file path of the downloaded .zip file  
-bin/load_all -c -g -s rtd -d postgres://ott@localhost:5432/ott https://www.rtd-denver.com/files/gtfs/google_transit.zip -t USA_Colorado.geojson
+curl https://www.rtd-denver.com/files/gtfs/google_transit.zip > x  # note: gtfsdb's current HTTP GET routine doesn't work with RTD's server / redirects 
+bin/load_all -c -g -s rtd  -t $PWD/USA_Colorado.geojson -d postgres://ott@localhost:5432/ott x
 bin/load_speed_data -s rtd
 
 
