@@ -368,19 +368,18 @@
 
     makeMenu(['stop_segments', 'traffic_segments', 'stops']);
 
-    /** hacky zoom to layer */
+    /** code below will (hackily) pan to the .geojson layer */
+    /* commenting this out for now ... better to just provide coords to center of interest rather
+       than pan to a random spot on the .geojson layer
     setTimeout(() => {
-      var seg = getUrlParam('segments', 'trimet.geojson');
-      if(!seg.includes('trimet')) {
-        var features = map.querySourceFeatures('segments', { 'filter': ['==', '$type', 'Point']} );
-        var coordinates = features[0].geometry.coordinates;
-        map.setCenter(coordinates);
-        map.setZoom(10.0);
-        //var bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[1]);
-        //map.fitBounds(bounds, { padding: 200 });
-      }
+      var features = map.querySourceFeatures('segments', { 'filter': ['==', '$type', 'Point']} );
+      var coordinates = features[0].geometry.coordinates;
+      map.setCenter(coordinates);
+      map.setZoom(10.0);
+      //var bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[1]);
+      //map.fitBounds(bounds, { padding: 200 });
     }, 3000);
-
+    */
   </script>
 </body>
 </html>
