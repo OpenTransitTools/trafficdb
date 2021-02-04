@@ -79,9 +79,36 @@
   <nav id="menu"></nav>
   <div id='map'></div>
   <script>
+    function getUrlParam(name, defVal) {
+      var retVal;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        retVal = params.get(name);
+        if(retVal === null)
+          retVal = defVal;
+      } catch (e) {
+        retVal = defVal;
+      }
+      return retVal;
+    }
+
+    var segmentsGeojson = getUrlParam('segments', 'trimet.geojson');
+
+    var url = 'https://tiles.trimet.org/styles/trimet/style.json';
+    var customAttrib = '&copy;OpenTransitTools &copy;OpenStreetMap';
+    var render_above_this_layer = 'road_major_label'
+    // NOTE: 'road_major_label' is in the base layer style .. put here renders that above this layer
+
+    if(segmentsGeojson !== 'trimet.geojson' && segmentsGeojson !== 'ctran.geojson') {
+      url = "https://api.maptiler.com/maps/bright/style.json?key=wUvV014mmfzELsh6ucYT";
+      url = "https://api.maptiler.com/maps/voyager/style.json?key=wUvV014mmfzELsh6ucYT";
+      customAttrib = '&copy;MapTiler &copy;OpenStreetMap';
+      render_above_this_layer = 'place_hamlet';
+    }
+
     var map = new mapboxgl.Map({
       container: 'map',
-      style: 'https://tiles.trimet.org/styles/trimet/style.json',
+      style: url,
       pitch: 90,
       antialias: true,
       hash: true,
@@ -121,21 +148,8 @@
         icon: iconMarkerEl,
         multiple: false
       },
-      customAttribution: 'Powered bi Frank OpenTransitTools'
+      customAttribution: customAttrib
     });
-
-    function getUrlParam(name, defVal) {
-      var retVal;
-      try {
-        const params = new URLSearchParams(window.location.search);
-        retVal = params.get(name);
-        if(retVal === null)
-          retVal = defVal;
-      } catch (e) {
-        retVal = defVal;
-      }
-      return retVal;
-    }
 
     map.addControl(nav);
     map.addControl(scale);
@@ -145,7 +159,6 @@
     map.addControl(geo,  'bottom-right');
 
     map.on('load', function () {
-      var segmentsGeojson = getUrlParam('segments', 'trimet.geojson');
       document.title = document.title + " - " + segmentsGeojson;
 
       map.addSource('segments', {
@@ -170,9 +183,7 @@
           'line-width': 8
         },
         'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'traffic']]
-      }, 'road_major_label');
-      // 'road_major_label' is in the base layer style .. put here renders that above this layer
-      // it will also render other things above that style (like place_label_city, etc...) above
+      }, render_above_this_layer);
 
       map.addLayer({
         'id': 'stop_segments',
@@ -189,7 +200,7 @@
           'line-width': 4
         },
         'filter': ['all', ['==', '$type', 'LineString'], ['==', 'layer', 'stop']]
-      }, 'road_major_label');
+      }, render_above_this_layer);
 
       map.addLayer({
         'id': 'stops',
@@ -203,7 +214,7 @@
           'circle-radius': { stops: [[8, 0.5], [11, 3], [16, 6]] }
         },
         'filter': ['==', '$type', 'Point']
-      }, 'road_major_label');
+      }, render_above_this_layer);
 
       map.addLayer({
         'id': 'segments-highlighted',
