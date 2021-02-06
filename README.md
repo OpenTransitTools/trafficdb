@@ -11,7 +11,7 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
 - [ACTransit (Oakland, CA)](https://opentransittools.github.io/trafficdb?segments=actransit.geojson#11.0/37.6722/-122.0564/0/20)
 - [VTA (San Jose, CA)](https://opentransittools.github.io/trafficdb?segments=vta.geojson#11.0/37.256/-121.8944/0/20)
 - [RTD (Denver, CO)](https://opentransittools.github.io/trafficdb?segments=rtd.geojson#11.0/39.7036/-104.8601/0/20)
-
+- [COTA (Columbus, OH)](https://opentransittools.github.io/trafficdb?segments=cota.geojson#11.0/39.9639/-82.9424/0/20)
 
 ### Manual Install 
 - _prerequisite install_: git, postgres, psql, postgis, ogr2ogr (gdal), python 3.x, psycopg2-binary, zc.buildout.
@@ -60,13 +60,17 @@ bin/load_all -c -g -s vta -t $PWD/USA_CA_BayArea.geojson -d postgres://ott@local
 bin/load_speed_data -s vta
 
 http://www.actransit.org/planning-focus/data-resource-center/
-bin/load_all -c -g -s actransit  -t $PWD/USA_CA_BayArea.geojson -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent
+bin/load_all -c -g -s actransit -t $PWD/USA_CA_BayArea.geojson -d postgres://ott@localhost:5432/ott https://url.actransit.org/GtfsCurrent
 bin/load_speed_data -s actransit
 
 https://www.rtd-denver.com/business-center/open-data/gtfs-developer-guide
 curl https://www.rtd-denver.com/files/gtfs/google_transit.zip > x  # note: gtfsdb's current HTTP GET routine doesn't work with RTD's server / redirects 
-bin/load_all -c -g -s rtd  -t $PWD/USA_Colorado.geojson -d postgres://ott@localhost:5432/ott x
+bin/load_all -c -g -s rtd -t $PWD/USA_Colorado.geojson -d postgres://ott@localhost:5432/ott x
 bin/load_speed_data -s rtd
+
+https://www.cota.com/data/
+bin/load_all -c -g -s cota -t $PWD/USA_Ohio.geojson -d postgres://ott@localhost:5432/ott https://www.cota.com/COTA/media/COTAContent/OpenGTFSData.zip
+bin/load_speed_data -s cota
 
 
 ### Individual Processes: CLEANUP TODO
