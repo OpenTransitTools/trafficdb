@@ -1,3 +1,5 @@
+import enum
+
 from sqlalchemy import Column, String, Numeric, func
 from sqlalchemy.orm import relationship
 from gtfsdb import Stop, Trip, Shape, PatternBase, util
@@ -10,18 +12,11 @@ import logging
 log = logging.getLogger(__file__)
 
 
-# todo: make util ... py2 and py3
-def printer(content, end='\n', flush=False, do_print=True):
-    try:
-        if do_print:
-            pass #print(content, end=end, flush=flush)
-    except:
-        # if here ... py 2.x 
-        print(content)
-
-
 class StopSegment(Base, PatternBase):
     __tablename__ = 'traffic_stop_segments'
+
+    prev_seg_id = Column(String(255))
+    next_seg_id = Column(String(255))
 
     begin_stop_id = Column(String(255), index=True, nullable=False)
     begin_stop_code = Column(String(255), nullable=False)
@@ -125,6 +120,8 @@ class StopSegment(Base, PatternBase):
             sst = StopSegmentTrip(session, stop_segment, trip)
             segment_trip_cache[sst.id] = sst
 
+        return stop_segment
+
     @classmethod
     def load(cls, session, do_trip_segments=True, chunk_size=10000, do_print=True):
         """
@@ -143,12 +140,22 @@ class StopSegment(Base, PatternBase):
             for j, t in enumerate(trips.all()):
                 stop_times = t.stop_times
                 stop_times_len = len(stop_times)
+                prev = None
                 if stop_times_len > 1:
                     printer('.', end='', flush=True, do_print=do_print and j % chunk_size == 0)
                     for i, st in enumerate(stop_times):
+                        # build a segment between this and next stop
                         begin_stop = stop_times[i]
                         end_stop = stop_times[i+1]
-                        cls._cache_segment(session, begin_stop, end_stop, t, segment_cache, trip_cache)
+                        curr = cls._cache_segment(session, begin_stop, end_stop, t, segment_cache, trip_cache)
+
+                        # start to build a linked list of segment to segment ids (used later in conflation)
+                        if prev:
+                            prev.next_seg_id = curr.id
+                            curr.prev_seg_id = prev.id
+                        prev = curr
+
+                        # stop condition: need 2 stops to build a segment
                         if i+2 >= stop_times_len:
                             break
 
@@ -230,3 +237,10 @@ class StopSegment(Base, PatternBase):
 
         geojson = '{{\n  "type": "FeatureCollection",\n  "features": [\n{}  ]\n}}'.format(featgeo)
         return geojson
+
+
+# todo: make util ... py2 and py3
+def printer(content, end='\n', flush=False, do_print=True):
+   if do_print:
+       #pass #print(content, end=end, flush=flush)
+       print(content)
