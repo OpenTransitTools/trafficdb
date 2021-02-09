@@ -23,6 +23,8 @@ class StopSegment(Base, PatternBase):
     end_stop_id = Column(String(255), index=True, nullable=False)
     end_stop_code = Column(String(255), nullable=False)
 
+    mode = Column(String(255), default="")
+
     begin_time = Column(String(9), nullable=False)
     end_time = Column(String(9), nullable=False)
     distance = Column(Numeric(20, 10), nullable=False)
@@ -93,6 +95,23 @@ class StopSegment(Base, PatternBase):
             log.warning("can't make geom for {}".format(id))
 
     @classmethod
+    def _make_mode(cls, current_modes, route):
+        """ add new / unique mode to mode string """
+        # import pdb; pdb.set_trace()
+        if current_modes is None:
+            current_modes = ""
+
+        ret_val = current_modes
+        try:
+            route_type = route.type.otp_type
+            if route_type and route_type not in current_modes:
+                sep = "+" if len(current_modes) > 0 else ""
+                ret_val = "{}{}{}".format(current_modes, sep, route_type)
+        except Exception as e:
+            log.debug(e)
+        return ret_val
+
+    @classmethod
     def _cache_segment(cls, session, begin_stop, end_stop, trip, segment_cache, segment_trip_cache):
         # step 1: make segment id
         id = "{}-{}".format(begin_stop.stop_id, end_stop.stop_id)
@@ -112,9 +131,11 @@ class StopSegment(Base, PatternBase):
             if end_stop.departure_time > stop_segment.end_time:
                 stop_segment.end_time = end_stop.departure_time
 
+        # step 2.1: add / augment mode string (e.g., could be somethign like TRAM+BUS where multiple modes share stops)
+        stop_segment.mode = cls._make_mode(stop_segment.mode, trip.route)
+
         # step 3: create trip record for this segment
         # note:  use of hash will filter out trips (thus sst records) that loop back on same segment
-        # import pdb; pdb.set_trace()
         if segment_trip_cache is not None:
             from .stop_segment_trip import StopSegmentTrip
             sst = StopSegmentTrip(session, stop_segment, trip)
