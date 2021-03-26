@@ -20,7 +20,7 @@ The Traffic Database aims to bring [GTFS](http://gtfs.org/reference/static), [OS
 - clone the trafficdb repo: 
 `git clone https://github.com/OpenTransitTools/trafficdb.git`
 - `cd trafficdb`
-- run the `scripts/create_db.sh` shell script
+- run the `scripts/db/create.sh` shell script
 - run [buildout](https://pypi.org/project/zc.buildout/) to pull in python dependencies
 - add your _INRIX credentials_ to *trafficdb/config/base.ini*
    - [inrix] 

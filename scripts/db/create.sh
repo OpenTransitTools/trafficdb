@@ -2,7 +2,7 @@
 ## crete OTT spatial db for OTT
 ##
 DIR=`dirname $0`
-. $DIR/db_base.sh
+. $DIR/base.sh
 
 for d in $db
 do

@@ -12,6 +12,8 @@ nohup.out
 .git
 .git/*
 .git/FETCH_HEAD
+*.tar
+*.tar.gz
 *.old
 .*#
 .#*

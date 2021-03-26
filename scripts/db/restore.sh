@@ -1,48 +1,37 @@
-. ~/OsmLoader/bin/db-common.sh
-
-cd $BASEDIR
+##
+## restore trafficdb schema from a dump file
+##
+DIR=`dirname $0`
+. $DIR/base.sh
 
 echo "START > > > > > "
 date
 
-# check to see the size of the dump and load it if there
-size=`ls -Hltr ${OSM_DUMP}.gz | awk -F" " '{ print $5 }'`
-if [[ $size -gt $OSM_MIN_SIZE ]]
-then
-  echo "gunzip ${OSM_DUMP}.gz"
-  rm -f ${OSM_DUMP}
-  gunzip ${OSM_DUMP}.gz
-else
-  echo "ERROR: ${OSM_DUMP}.gz ($CARTO_SCHEMA and $OSM_SCHEMA SCHEMAs) dump is not big enough at $size (less than $OSM_MIN_SIZE bytes)"
+# unzip any new dump file
+if [ -f $dump_file.gz ]; then
+  rm -f $dump_file
+  gunzip $dump_file.gz
 fi
 
-size=`ls -Hltr ${OSM_DUMP} | awk -F" " '{ print $5 }'`
-if [[ $size -gt $OSM_TAR_MIN_SIZE ]]
+# check to see the size of the dump.tar file exists and is sized
+size=`ls -ltr $dump_file | awk -F" " '{ print $5 }'`
+if [[ $size -gt 500000 ]]
 then
-  # test integrity of the dump file 
-  # TODO - or maybe move osm schema aside and move it back if )
-
-  # drop the old osm schema
-  echo "drop schema osm"
-  psql -p $PGPORT -d $PGDBNAME -U $PGUSER -c "drop schema $CARTO_SCHEMA cascade;"
-  psql -p $PGPORT -d $PGDBNAME -U $PGUSER -c "drop schema $OSM_SCHEMA cascade;"
+  # drop the old traffic data schema
+  echo "drop schema $schema"
+  $psql -h $host -p $port -U $user -d $db -c "drop schema $schema cascade;"
 
   # load osm schema db from tar
-  echo "restore osm dump"
-  pg_restore -d $PGDBNAME ${OSM_DUMP}
-
-  grantor "$CARTO_SCHEMA";
-  grantor "$OSM_SCHEMA";
+  echo "restore $schema.tar dump"
+  $pg_restore -h $host -p $port -U $user -d $db ${dump_file}
 
   # vacuum analyze db
-  echo "vacuum analyze"
-  psql -p $PGPORT -d $PGDBNAME -U $PGUSER -c "vacuum analyze;"
-
-  rm -f ${OSM_DUMP}.old
-  mv ${OSM_DUMP} ${OSM_DUMP}.old
+  echo "vacuum full analyze"
+  $psql -h $host -p $port -U $user -d $db -c "vacuum full analyze;"
 else
-  echo "ERROR: ${OSM_DUMP} ($CARTO_SCHEMA and $OSM_SCHEMA SCHEMAs) dump is not big enough at $size (less than $OSM_TAR_MIN_SIZE bytes)"
+  echo "ERROR: ${dump_file} not big enough at $size"
 fi
 
 date
 echo "END < < < < < < "
+

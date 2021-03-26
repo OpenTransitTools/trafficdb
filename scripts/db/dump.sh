@@ -1,24 +1,27 @@
-. ~/OsmLoader/bin/db-common.sh
+##
+## dump trafficdb schema
+##
+DIR=`dirname $0`
+. $DIR/base.sh
 
 echo "START > > > > > "
 date
 
-cd $BASEDIR
-
-# dump trimet postgres database to tar.gz, include only the following schemas;
-echo "pg_dump -n $OSM_SCHEMA -n $CARTO_SCHEMA $PGDBNAME -F t > $OSM_DUMP"
-pg_dump -n $OSM_SCHEMA -n $CARTO_SCHEMA $PGDBNAME -F t > $OSM_DUMP
+# dump the schema provided on the command line ('test' is the default)
+rm -f $dump_file
+dump_cmd="$pg_dump -n $schema $db -F t > $dump_file"
+echo $dump_cmd
+eval $dump_cmd
 
 # check to see the size of the dump
-size=`ls -ltr $OSM_DUMP | awk -F" " '{ print $5 }'`
-if [[ $size -gt $OSM_TAR_MIN_SIZE ]]
+size=`ls -ltr $dump_file | awk -F" " '{ print $5 }'`
+if [[ $size -gt 500000 ]]
 then
-  echo "gzip $OSM_DUMP"
-  rm -f ${OSM_DUMP}.gz
-  gzip $OSM_DUMP
-  ./bin/db-dump-scp.sh $*
+  mv ${dump_file}.gz /tmp/
+  zip="gzip $dump_file"
+  gzip $dump_file
 else
-  echo "ERROR: ${OSM_DUMP} ($CARTO_SCHEMA and $OSM_SCHEMA SCHEMAs) dump is not big enough at $size (less than $OSM_TAR_MIN_SIZE bytes)"
+  echo "ERROR: ${dump_file} not big enough at $size"
 fi
 
 date
