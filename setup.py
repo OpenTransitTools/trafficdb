@@ -72,5 +72,6 @@ setup(
         printer = ott.trafficdb.view.printer:main
         view_map = ott.trafficdb.view.geojson:main
         bbox = ott.trafficdb.view.bbox:main
+        local_server = ott.trafficdb.view.server:local_server
     """,
 )

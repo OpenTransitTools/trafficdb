@@ -1,11 +1,7 @@
 from ott.trafficdb.model.stop_segment import StopSegment
 from ott.trafficdb.control.utils import make_session
-from ott.utils import file_utils, exe_utils
-
-
-def local_server():
-    print("run simple python server and open map")
-    exe_utils.run_cmd("scripts/start_static.sh", shell_script=True)
+from ott.utils import file_utils
+from .server import local_server
 
 
 def stop_geojson(session, file="segments.geojson", dir="docs"):
