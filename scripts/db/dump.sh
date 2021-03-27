@@ -9,7 +9,7 @@ date
 
 # dump the schema provided on the command line ('test' is the default)
 rm -f $dump_file
-dump_cmd="$pg_dump -n $schema $db -F t > $dump_file"
+dump_cmd="$pg_dump -h $host -p $port -U $user -n $schema $db -F t > $dump_file"
 echo $dump_cmd
 eval $dump_cmd
 

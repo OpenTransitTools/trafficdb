@@ -23,7 +23,7 @@ then
 
   # load osm schema db from tar
   echo "restore $schema.tar dump"
-  $pg_restore -h $host -p $port -U $user -d $db ${dump_file}
+  $pg_restore -h $host -p $port -U $user -d $db $dump_file
 
   # vacuum analyze db
   echo "vacuum full analyze"
