@@ -22,7 +22,6 @@ db_opts="-f \"PostgreSQL\" PG:\"host=$host port=$port active_schema=$schema dbna
 table_cmd="-nln $table_name"
 overwrite="-overwrite"
 
-
 ##
 ## will iterate over one or more geojson files, and import them all into a table name
 ## NOTES:
