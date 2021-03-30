@@ -15,6 +15,7 @@ nohup.out
 .git/FETCH_HEAD
 *.tar
 *.tar.gz
+*.sql.gz
 *.old
 .*#
 .#*

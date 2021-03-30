@@ -23,7 +23,7 @@ then
 
   # load osm schema db from dump file
   echo "restore $dump_file dump"
-  cat $dump_file | $psql -h $host -p $port -U $user -d $db
+  $ipsql -h $host -p $port -U $user -d $db < $dump_file
 
   # vacuum analyze db
   echo "vacuum full analyze"

@@ -4,6 +4,7 @@
 
 # cmds ... might be overridded by Docker versions
 psql=${PSQL:=psql}
+ipsql=${iPSQL:=psql}
 pg_dump=${PG_DUMP:=pg_dump}
 pg_restore=${PG_RESTORE:=pg_restore}
 

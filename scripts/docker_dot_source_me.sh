@@ -1,6 +1,6 @@
 export PSQL="docker run --rm --net=host postgis/postgis psql"
+export iPSQL="docker run -i --rm --net=host postgis/postgis psql"  # for file redirects ala < dump.sql
 export PG_DUMP="docker run --rm --net=host postgis/postgis pg_dump"
-export PG_RESTORE="docker run --rm --net=host postgis/postgis pg_restore"
 
 export GDAL="docker run --rm -v $PWD:$PWD --net=host osgeo/gdal:ubuntu-small-latest"
 
