@@ -17,4 +17,4 @@ host=${DB_HOST:=localhost}
 port=${DB_PORT:=5432}
 
 schema=${1:-'test'}
-dump_file="$schema.tar"
+dump_file="$schema.sql"

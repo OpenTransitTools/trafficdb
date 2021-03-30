@@ -21,9 +21,9 @@ then
   echo "drop schema $schema"
   $psql -h $host -p $port -U $user -d $db -c "drop schema $schema cascade;"
 
-  # load osm schema db from tar
-  echo "restore $schema.tar dump"
-  $pg_restore -h $host -p $port -U $user -d $db $dump_file
+  # load osm schema db from dump file
+  echo "restore $dump_file dump"
+  $pg_restore -h $host -p $port -U $user -d $db < $dump_file
 
   # vacuum analyze db
   echo "vacuum full analyze"
