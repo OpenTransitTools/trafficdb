@@ -7,19 +7,24 @@ To get trafficdb to do WMS, here's a short todo:
      - https://github.com/kartoza/docker-geoserver/blob/master/docker-compose.yml
      - if we move, can we get all 3 to work?
  
-   1. refactor speed load ... new table traffic_inrix_segment_speed to capture speeds for all inrix segments, not just transit segments that have FK's to transit
+   1. refactor speed load:
+      - new table traffic_inrix_segment_speed to capture speeds for all inrix segments (e.g., traffic_segment table has FK's to transit shapes, so it won't be complete compared to entire INRIX data)
+      - host 2 WMS / WFS layers .. show transit segment w/speed and also all segments with speed
+      - maybe highlight traffic routes some way?
    
    1. What is the view for the WMS layer?  How to combine line geometry and speed data tables?
      - do we create a MVIEW of traffic_inrix_segments and traffic_inrix_segment_speed ?
      - do we create a GS layer using SQL w/in GeoServer?
-       - select * from trimet.traffic_segment_speed s, trimet.traffic_segment t where t.traffic_segment_id = s.traffic_segment_id 
+       - https://docs.geoserver.geo-solutions.it/edu/en/adding_data/add_sqllayers.html
+       - select * from trimet.traffic_segment_speed s, trimet.traffic_segment t where t.traffic_segment_id = s.traffic_segment_id
+       - ...
      
-   1. What about time data ... show speed now, and in recent past
-     - how to differentiate speed data in the database (now, 3 seconds ago, 6 seconds ago, et...)?
-     - delete data after N seconds (separate thread? ... transaction locks)
-   
+   1. What about time data ... show speed now, and in recent past:
+      - how to differentiate speed data in the database (now, 3 seconds ago, 6 seconds ago, et...)?
+      - delete data after N seconds (separate thread? ... transaction locks)
+     
    1. What other data do we bring in?
-     - http://docs.inrix.com/traffic/dangerousslowdowns/
-     - http://docs.inrix.com/traffic/xdincidents/
-     - http://docs.inrix.com/traffic/trafficcameras/
+      - http://docs.inrix.com/traffic/dangerousslowdowns/
+      - http://docs.inrix.com/traffic/xdincidents/
+      - http://docs.inrix.com/traffic/trafficcameras/
   
