@@ -1,3 +1,5 @@
+May 20, 2021 -- from discussion this morning w/init
+
 To get trafficdb to do WMS, here's a short todo:
   1. look into Kartoza geoserver .. and getting it to talk to PostGIS
      - note couldn't get Kartoza's `docker pull kartoza/geoserver` talking with PostGIS running locally or running in another container (but didn't try hard .. networking)
