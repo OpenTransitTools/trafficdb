@@ -1,7 +1,8 @@
 CONFLATE GTFS (Stop Segments) to LINE data (OSM, INRIX, etc...):
 ================================================================
 
-Anything here?  https://github.com/mapsme/osm_conflate/tree/master/conflate
+The current INRIX to GTFS conflation routines need work.  In the readme below is a running diary of differnt thoughts and ideas on both what was tried, and also how this work may be improved in the future.
+
 
 10/13/2020:
 ===========
@@ -25,6 +26,9 @@ https://github.com/ad-freiburg/pfaedle - stop to stop matched to OSM for a detai
 
 1/3/2020:
 ===========
+
+Anything here?  https://github.com/mapsme/osm_conflate/tree/master/conflate
+
 -- select count(distinct shape_id) from trimet.traffic_stop_segment_trips
 --DROP TABLE ctran.traffic_stop_segments_t;
 --CREATE TABLE ctran.traffic_stop_segments_t AS SELECT * FROM ctran.traffic_stop_segments;
