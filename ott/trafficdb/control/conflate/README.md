@@ -3,6 +3,25 @@ CONFLATE GTFS (Stop Segments) to LINE data (OSM, INRIX, etc...):
 
 Anything here?  https://github.com/mapsme/osm_conflate/tree/master/conflate
 
+10/13/2020:
+===========
+
+https://gis.stackexchange.com/questions/349001/aligning-line-with-closest-line-segment-in-postgis
+
+This is a classic road network conflation problem. It has the following challenges:
+- determining a set of matched road segments to a path line in spite of them being very different lengths
+- clipping the matched road segments to the path line (this is best done after merging the matched road segments (the "path lines" are the red lines in the diagram)
+
+For the matching, a sketch of an approach is:
+- For each path line, select the road segments which are within a distance tolerance d
+- For each matched road segment, "clip" the path line to it (clipping explained below)
+- Discard any clipped segments which have length 0 (these are segments which are roughly perpendicular to the path, e.g. cross streets)
+- Compute the Hausdorff distance between the road segment and the clipped path, and keep only segments with a distance below the tolerance d (this discards road segments where only one end is near the path)
+- Clip each road segment to the path line (to discard pieces of the road segment which extend beyond the path)
+- Merge the clipped road segments together
+
+Other apps:
+https://github.com/ad-freiburg/pfaedle - stop to stop matched to OSM for a detailed line
 
 1/3/2020:
 ===========
