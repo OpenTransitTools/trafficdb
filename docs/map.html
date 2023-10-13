@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <!-- note: much of the code / style ideas taken from various examples of mapbox's gl js -->
 <html>
-<head>
+  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stop Segments</title>
-  <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox-gl.css" />
-  <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/mapbox.css" />
-  <script src="https://tiles.trimet.org/mapbox-gl.js"></script>
-  <script src="https://tiles.trimet.org/mapbox.js"></script>
-  <script src="https://tiles.trimet.org/leaflet-hash.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://tiles.trimet.org/maplibre-gl.css" />
+  <script src="https://tiles.trimet.org/maplibre-gl.js"></script>
+  <script>var mapboxgl=maplibregl;</script>
   <script src="https://joxit.dev/pelias-mapbox-gl-js/pelias-geocoder.js"></script>
   <link   href='https://joxit.dev/pelias-mapbox-gl-js/pelias-geocoder.css' rel='stylesheet'  type='text/css'/>
   <style>
@@ -106,7 +104,7 @@
       render_above_this_layer = 'place_hamlet';
     }
 
-    var map = new mapboxgl.Map({
+    var map = new maplibregl.Map({
       container: 'map',
       style: url,
       pitch: 90,
@@ -115,23 +113,23 @@
       attributionControl: false
     });
 
-    var scale = new mapboxgl.ScaleControl({
+    var scale = new maplibregl.ScaleControl({
       maxWidth: 80,
       unit: 'imperial'
     });
 
-    var attrib = new mapboxgl.AttributionControl({
+    var attrib = new maplibregl.AttributionControl({
       compact: true,
       customAttribution: '© <a target="_" href="https://tiles.trimet.org">TriMet</a> '
     });
 
-    var full = new mapboxgl.FullscreenControl();
+    var full = new maplibregl.FullscreenControl();
 
-    var nav = new mapboxgl.NavigationControl({
+    var nav = new maplibregl.NavigationControl({
       visualizePitch: true
     });
 
-    var geo = new mapboxgl.GeolocateControl({
+    var geo = new maplibregl.GeolocateControl({
       positionOptions: {
         enableHighAccuracy: true
       },
@@ -241,7 +239,7 @@
         'filter': ['in', 'id', '']
       });
 
-      var tooltip = new mapboxgl.Popup({
+      var tooltip = new maplibregl.Popup({
         closeButton: false,
         closeOnClick: false
       });
@@ -276,7 +274,7 @@
         window.open(url, "_blank");
       });
 
-      var popup = new mapboxgl.Popup({closeOnClick: false});
+      var popup = new maplibregl.Popup({closeOnClick: false});
       map.on('contextmenu', function(e) {
         tooltip.remove();
 
